@@ -35,6 +35,7 @@ import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListDataBase;
 import com.xiaoxin.netmusic2.database.SongListDataBaseDao;
+import com.xiaoxin.netmusic2.database.SongListEntity;
 import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 
@@ -77,7 +78,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
 
-    private DialogInterface.OnCancelListener onCancelListener;
+    private AlertDialog alertDialog;
     
 
     @Override
@@ -177,18 +178,16 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
             @Override
             public void subscribe(@NonNull ObservableEmitter<Integer> emitter)throws Exception
             {
-                songListDataBaseDao.insert(name);
-                for(SongEntity entity : songsOfNewSongList)
+                SongListEntity entity=new SongListEntity();
+                entity.setCount(songsOfNewSongList.size());
+                entity.setSongList(name);
+                songListDataBaseDao.insert(entity);
+                for(SongEntity songEntity : songsOfNewSongList)
                 {
-                    entity.setSongList(name);
+                    songEntity.setSongList(name);
                 }
                 songDataBaseDao.insert(songsOfNewSongList);
-                onCancelListener=new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialogInterface) {
-                        dialogInterface.cancel();
-                    }
-                };
+                alertDialog.dismiss();
             }
         }).subscribeOn(Schedulers.io()).subscribe();
     }
@@ -366,10 +365,9 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                             }
                         }).setNegativeButton("取消",null).show();
                 final ProgressBar mProgressBar=new ProgressBar(this);
-                new AlertDialog.Builder(this).setTitle("请稍微等待")
+                alertDialog=new AlertDialog.Builder(this).setTitle("请稍微等待")
                         .setView(mProgressBar)
                         .setCancelable(false)
-                        .setOnCancelListener(onCancelListener)
                         .show();
                 break;
             case R.id.ButtonForSearchInLocalSongActivity:

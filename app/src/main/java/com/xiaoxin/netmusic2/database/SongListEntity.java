@@ -8,6 +8,17 @@ public class SongListEntity {
     @ColumnInfo
     private String songList;
 
+    @ColumnInfo
+    private int count;
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
     public String getSongList() {
         return songList;
     }

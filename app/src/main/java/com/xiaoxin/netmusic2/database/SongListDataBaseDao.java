@@ -9,11 +9,11 @@ import java.util.List;
 public interface SongListDataBaseDao {
 
     @Insert
-    void insert(String m);
+    void insert(SongListEntity entity);
 
     @Query("SELECT * FROM SongList")
     List<String> loadAll();
 
     @Delete
-    void delete(String m);
+    void delete(SongListEntity entity);
 }
