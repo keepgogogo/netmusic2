@@ -9,7 +9,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -17,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.xiaoxin.netmusic2.ui.SongListEditFragment;
+import com.xiaoxin.netmusic2.ui.SongPlayingFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
                 //todo
                 break;
             case R.id.AddFromLocalSongs:
-                //todo
+                Intent intent=new Intent(this,LocalSongsAddActivity.class);
+                startActivity(intent);
                 break;
             default:
                 break;

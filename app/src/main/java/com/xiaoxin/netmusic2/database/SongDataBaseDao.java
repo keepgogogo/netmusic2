@@ -12,6 +12,10 @@ public interface SongDataBaseDao {
     @Insert
     void insert(SongEntity ... songEntities);
 
+    @Insert
+    void insert(List<SongEntity> entities);
+
+
     @Query("SELECT * FROM SongOfList")
     List<SongEntity> getAll();
 
