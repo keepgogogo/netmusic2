@@ -21,6 +21,7 @@ import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
+import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ public class SongOfSongListFragment extends Fragment {
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     private MainActivity mainActivity;
+    private MainActivityViewModel mainActivityViewModel;
 
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
@@ -46,15 +48,17 @@ public class SongOfSongListFragment extends Fragment {
     private List<SongEntity> songEntities;
 
     @Override
-    public void onViewCreated(@NonNull View view, @NonNull Bundle savedInstanceState)
+    public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
     {
         mainActivity=(MainActivity)getActivity();
+        assert mainActivity != null;
+        mainActivityViewModel=mainActivity.getMainActivityViewModel();
 
         progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInSongOfSongListFragment);
         progressBar.setVisibility(View.VISIBLE);
 
         //获取歌曲列表
-        loadSongEntities();
+        loadSongEntities(mainActivityViewModel.getSongListEntity().getSongList());
 
         //初始化recyclerView
         initRecyclerView(view);
@@ -115,7 +119,7 @@ public class SongOfSongListFragment extends Fragment {
 
         Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
             @Override
-            public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)throws Exception
+            public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)
             {
                 List<SongEntity> songEntities;
                 songEntities=songDataBaseDao.getBySongList(nameOfSongList);
@@ -125,7 +129,7 @@ public class SongOfSongListFragment extends Fragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(new Consumer<List<SongEntity>>() {
                     @Override
-                    public void accept(List<SongEntity> songs) throws Exception {
+                    public void accept(List<SongEntity> songs){
                         songEntities=songs;
                         viewModel.getCurrentData().setValue(songs);
                         progressBar.setVisibility(View.INVISIBLE);

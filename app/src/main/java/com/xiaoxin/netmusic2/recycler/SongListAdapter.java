@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiaoxin.netmusic2.R;
@@ -72,5 +71,43 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
         holder.textViewForSongListName.setText(dataList.get(position).getSongList());
         holder.imageViewAndPlayAll.setTag(position);
         holder.cardView.setTag(position);
+    }
+
+    /**
+     * 点击事件监听
+     */
+
+    private SongListRecyclerClickListener clickListener;
+
+    public interface SongListRecyclerClickListener{
+        void onClick(View view,SongListRecyclerEnum viewName,int position);
+    }
+
+    public void setClickListener(SongListRecyclerClickListener clickListener) {
+        this.clickListener = clickListener;
+    }
+
+    @Override
+    public void onClick(View view)
+    {
+        int position=(int)view.getTag();
+        if(clickListener!=null){
+            switch (view.getId())
+            {
+                case R.id.CardViewInSongListRecycler:
+                    clickListener.onClick(view,SongListRecyclerEnum.OPEN_SONG_LIST,position);
+                    break;
+                case R.id.ImageButtonForPlayInSongListRecycler:
+                    clickListener.onClick(view,SongListRecyclerEnum.PLAY_ALL_OF_THE_SONG_LIST,position);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public enum SongListRecyclerEnum{
+        OPEN_SONG_LIST,
+        PLAY_ALL_OF_THE_SONG_LIST
     }
 }

@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.xiaoxin.netmusic2.ui.SongListEditFragment;
 import com.xiaoxin.netmusic2.ui.SongPlayingFragment;
+import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView navigationView;
     private FragmentManager fragmentManager;
     private List<Fragment> fragmentContainer;
+    private MainActivityViewModel mainActivityViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         fragmentContainer.add(new SongPlayingFragment());
         initNavigation();
         setFragment(fragmentContainer.get(FRAGMENT_OF_SONG_LIST));
+        mainActivityViewModel=new MainActivityViewModel();
     }
 
 
@@ -119,5 +122,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    public MainActivityViewModel getMainActivityViewModel() {
+        return mainActivityViewModel;
+    }
 }

@@ -12,7 +12,7 @@ public interface SongListDataBaseDao {
     void insert(SongListEntity entity);
 
     @Query("SELECT * FROM SongList")
-    List<String> loadAll();
+    List<SongListEntity> loadAll();
 
     @Delete
     void delete(SongListEntity entity);
