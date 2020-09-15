@@ -4,37 +4,55 @@ import android.graphics.Bitmap;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 @Entity(tableName = "SongOfList")
 public class SongEntity {
 
-    public SongEntity(Song mSong)
-    {
-        super();
-        song=mSong;
-        artist=song.getArtist();
-    }
+    @PrimaryKey(autoGenerate = true)
+    private int id;
 
-    //歌单的歌曲
+
+    //歌曲文件路径
     @ColumnInfo
-    private Song song;
+    private String path;
 
+    //歌曲名
+    @ColumnInfo
+    private String name;
+
+    //歌曲所属专辑
+    @ColumnInfo
+    private String album;
+
+    //歌曲艺术家
     @ColumnInfo
     private String artist;
+
+    //歌曲大小
+    @ColumnInfo
+    private long size;
+
+    //歌曲时长
+    @ColumnInfo
+    private int duration;
+
 
     //歌单名
     @ColumnInfo
     private String songList;
 
     @ColumnInfo
-    private Bitmap albumPicture;
+    private byte[] albumPicture;
 
-    public Song getSong() {
-        return song;
-    }
+
 
     public void setSong(Song song) {
-        this.song = song;
+        path=song.getPath();
+        album=song.getAlbum();
+        duration=song.getDuration();
+        size=song.getSize();
+        name=song.getName();
     }
 
     public String getSongList() {
@@ -45,11 +63,11 @@ public class SongEntity {
         this.songList = songList;
     }
 
-    public Bitmap getAlbumPicture() {
+    public byte[] getAlbumPicture() {
         return albumPicture;
     }
 
-    public void setAlbumPicture(Bitmap albumPicture) {
+    public void setAlbumPicture(byte[] albumPicture) {
         this.albumPicture = albumPicture;
     }
 
@@ -59,5 +77,53 @@ public class SongEntity {
 
     public void setArtist(String artist) {
         this.artist = artist;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(String album) {
+        this.album = album;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

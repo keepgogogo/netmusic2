@@ -36,11 +36,13 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public SongAdapter()
     {
         super();
-        playingBitmap= BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
-        pauseBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
     }
 
-    public void setContext(Context context){this.context=context;}
+    public void setContext(Context context){
+        this.context=context;
+        playingBitmap= BitmapFactory.decodeResource(this.context.getResources(),R.mipmap.ic_play_bar_btn_play);
+        pauseBitmap=BitmapFactory.decodeResource(this.context.getResources(),R.mipmap.ic_play_bar_btn_pause);
+    }
 
     public void setDataList(List<SongEntity> mData) {
         this.dataList = mData;
@@ -52,6 +54,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     @Override
     public int getItemCount(){
+        if (dataList==null){
+            return 0;
+        }
         return dataList.size();
     }
 
@@ -91,7 +96,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     @Override
     public void onBindViewHolder(SongViewHolder holder,int position)
     {
-        String nameOfSong=dataList.get(position).getSong().getName();
+        String nameOfSong=dataList.get(position).getName();
         String singerOfSong=dataList.get(position).getArtist();
         holder.textViewForNameOfSong.setText(nameOfSong==null?"":nameOfSong);
         holder.textViewForNameOfSinger.setText(singerOfSong==null?"":singerOfSong);
@@ -106,7 +111,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     {
         if(dataList.get(position).getAlbumPicture()!=null)
         {
-            holder.imageViewForAlbumCover.setImageBitmap(dataList.get(position).getAlbumPicture());
+            byte[] bytes=dataList.get(position).getAlbumPicture();
+            Bitmap bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.length-1);
+            holder.imageViewForAlbumCover.setImageBitmap(bitmap);
         }
     }
 

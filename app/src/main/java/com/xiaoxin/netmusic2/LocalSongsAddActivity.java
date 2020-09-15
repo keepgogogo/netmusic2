@@ -39,6 +39,7 @@ import com.xiaoxin.netmusic2.database.SongListEntity;
 import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -51,7 +52,6 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
-import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 public class LocalSongsAddActivity extends AppCompatActivity implements View.OnClickListener {
@@ -117,6 +117,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     @SuppressLint("CheckResult")
     public void loadSongs()
     {
+
         fileLoader=new FileLoader();
         fileLoader.setContext(this)
                 .setRequestUri(FileLoader.REQUEST_AUDIO_EXTERNAL_CONTENT_URI)
@@ -125,8 +126,9 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
 
         Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
             @Override
-            public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)throws Exception
+            public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)
             {
+                int i=1;
                 List<SongEntity> songEntities=new ArrayList<>();
                 fileLoader.startQuery();
                 Cursor cursor=fileLoader.getCursor();
@@ -144,9 +146,27 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                     tempSong.setDuration(cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)));
                     tempSong.setId(cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)));
                     tempSong.setAlbumId(cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)));
-                    SongEntity entity=new SongEntity(tempSong);
-                    entity.setAlbumPicture(loadCoverFromMediaStore(tempSong.getAlbumId()));
+                    SongEntity entity=new SongEntity();
+                    entity.setSong(tempSong);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                    //todo
+                    //获取不到bitmap
+                    Bitmap tempBitmap=loadCoverFromMediaStore(tempSong.getAlbumId());
+                    if(tempBitmap!=null){
+                        tempBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    }else {
+                        tempBitmap=BitmapFactory.decodeResource(LocalSongsAddActivity.this.getResources(),
+                                R.mipmap.default_cover);
+                        tempBitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
+                    }
+
+                    byte[] data = baos.toByteArray();
+                    entity.setAlbumPicture(data);
                     songEntities.add(entity);
+                    Log.d("RxJava读取", "subscribe:完成了"+i+"一首歌操作 ");
+                    i++;
                 }
                 emitter.onNext(songEntities);
             }
@@ -176,7 +196,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     {
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
-            public void subscribe(@NonNull ObservableEmitter<Integer> emitter)throws Exception
+            public void subscribe(@NonNull ObservableEmitter<Integer> emitter)
             {
                 SongListEntity entity=new SongListEntity();
                 entity.setCount(songsOfNewSongList.size());
@@ -239,7 +259,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                             List<SongEntity> temp=new ArrayList<>();
                             for(SongEntity songEntity : songsOfLocal)
                             {
-                                if((songEntity.getSong().getName()!=null)&&songEntity.getSong().getName().contains(m))
+                                if((songEntity.getName()!=null)&&songEntity.getName().contains(m))
                                 {
                                     temp.add(songEntity);
                                 }
@@ -286,12 +306,14 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
      */
     public void initRecyclerView()
     {
-        recyclerView=(RecyclerView)findViewById(R.id.RecyclerInSongOfSongListFragment);
+        recyclerView=(RecyclerView)findViewById(R.id.RecyclerViewLocalSongs);
         layoutManager=new LinearLayoutManager(LocalSongsAddActivity.this);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         viewModel=new ViewModelProvider(this).get(SongRecyclerViewModel.class);
         adapter=new SongAdapter();
+        adapter.setContext(this);
+        recyclerView.setAdapter(adapter);
 
         final Observer<List<SongEntity>> ListOfSongsObserver= new Observer<List<SongEntity>>() {
             @Override
