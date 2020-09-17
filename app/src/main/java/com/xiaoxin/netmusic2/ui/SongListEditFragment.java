@@ -38,6 +38,8 @@ public class SongListEditFragment extends Fragment {
                     }
                 })).attach();
         mainActivity.getMainActivityViewModel().setSongListEditFragmentViewPagerAdapter(adapter);
+        adapter.createFragment(SongListEditFragmentViewPagerAdapter.ALL_SONG_LIST_FRAGMENT);
+
     }
     public SongListEditFragment() {
         // Required empty public constructor

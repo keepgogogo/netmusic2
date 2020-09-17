@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "SongOfList")
@@ -45,7 +46,16 @@ public class SongEntity {
     @ColumnInfo
     private byte[] albumPicture;
 
+    @Ignore
+    private boolean isCheckBoxChecked;
 
+    public boolean isCheckBoxChecked() {
+        return isCheckBoxChecked;
+    }
+
+    public void setCheckBoxChecked(boolean checkBoxChecked) {
+        isCheckBoxChecked = checkBoxChecked;
+    }
 
     public void setSong(Song song) {
         path=song.getPath();

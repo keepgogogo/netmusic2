@@ -79,6 +79,9 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     private SongDataBaseDao songDataBaseDao;
 
     private AlertDialog alertDialog;
+    private Bitmap defaultAlbumBitmap;
+    private ByteArrayOutputStream defaultAlbumOutPutStream;
+    private byte[] defaultAlbumBytes;
     
 
     @Override
@@ -105,6 +108,13 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         
         songDataBase=SongDataBase.getDatabase(this);
         songDataBaseDao=songDataBase.SongDataBaseDao();
+
+        defaultAlbumBitmap=BitmapFactory.decodeResource(LocalSongsAddActivity.this.getResources(),
+                R.mipmap.default_cover);
+        defaultAlbumOutPutStream=new ByteArrayOutputStream();
+        defaultAlbumBitmap.compress(Bitmap.CompressFormat.JPEG,100,defaultAlbumOutPutStream);
+        defaultAlbumBytes=defaultAlbumOutPutStream.toByteArray();
+
         //通过rxjava2调用MediaStore读取本地歌曲
         loadSongs();
         //初始化recyclerView
@@ -149,21 +159,16 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                     SongEntity entity=new SongEntity();
                     entity.setSong(tempSong);
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
                     //todo
                     //获取不到bitmap
                     Bitmap tempBitmap=loadCoverFromMediaStore(tempSong.getAlbumId());
                     if(tempBitmap!=null){
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         tempBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        entity.setAlbumPicture(baos.toByteArray());
                     }else {
-                        tempBitmap=BitmapFactory.decodeResource(LocalSongsAddActivity.this.getResources(),
-                                R.mipmap.default_cover);
-                        tempBitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
+                        entity.setAlbumPicture(defaultAlbumBytes);
                     }
-
-                    byte[] data = baos.toByteArray();
-                    entity.setAlbumPicture(data);
                     songEntities.add(entity);
                     Log.d("RxJava读取", "subscribe:完成了"+i+"一首歌操作 ");
                     i++;
@@ -250,6 +255,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                 if(m.equals(""))
                 {
                     viewModel.getCurrentData().setValue(songsOfLocal);
+                    adapter.setDataList(songsOfLocal);
                 }
                 else
                 {
@@ -286,6 +292,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                                 @Override
                                 public void accept(List<SongEntity> songs) throws Exception {
                                     viewModel.getCurrentData().setValue(songs);
+                                    adapter.setDataList(songs);
                                 }
                             }).subscribe();
                 }
@@ -326,16 +333,16 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         viewModel.getCurrentData().observe(LocalSongsAddActivity.this,ListOfSongsObserver);
         adapter.setClickListener(new SongAdapter.SongRecyclerClickListener() {
             @Override
-            public void onClick(View view, SongAdapter.ViewNameSongRecyclerEnum viewName, int position) {
+            public void onClick(View view, SongAdapter.ViewNameSongRecyclerEnum viewName, SongEntity entity) {
                 switch (viewName)
                 {
                     case CHECK_BOX_SET_FALSE:
                         //todo
-                        songsOfNewSongList.remove(songsOfLocal.get(position));
+                        songsOfNewSongList.remove(entity);
                         break;
                     case CHECK_BOX_SET_TRUE:
                         //TODO
-                        songsOfNewSongList.add(songsOfLocal.get(position));
+                        songsOfNewSongList.add(entity);
                         break;
                     case IMAGE_BUTTON_PLAY:
                         //TODO
@@ -348,6 +355,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                 }
             }
         });
+        adapter.setViewModel(viewModel);
     }
 
     /**
@@ -384,13 +392,15 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String m=dialogEditText.getText().toString();
                                 saveNewSongList(m);
+                                final ProgressBar mProgressBar=new ProgressBar(LocalSongsAddActivity.this);
+                                alertDialog=new AlertDialog
+                                        .Builder(LocalSongsAddActivity.this).setTitle("请稍微等待")
+                                        .setView(mProgressBar)
+                                        .setCancelable(false)
+                                        .show();
                             }
                         }).setNegativeButton("取消",null).show();
-                final ProgressBar mProgressBar=new ProgressBar(this);
-                alertDialog=new AlertDialog.Builder(this).setTitle("请稍微等待")
-                        .setView(mProgressBar)
-                        .setCancelable(false)
-                        .show();
+
                 break;
             case R.id.ButtonForSearchInLocalSongActivity:
                 View viewFocus = this.getCurrentFocus();

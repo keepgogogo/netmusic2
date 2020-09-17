@@ -87,7 +87,7 @@ public class SongOfSongListFragment extends Fragment {
         viewModel.getCurrentData().observe(mainActivity,ListOfSongsObserver);
         adapter.setClickListener(new SongAdapter.SongRecyclerClickListener() {
             @Override
-            public void onClick(View view, SongAdapter.ViewNameSongRecyclerEnum viewName, int position) {
+            public void onClick(View view, SongAdapter.ViewNameSongRecyclerEnum viewName, SongEntity entity) {
                 switch (viewName)
                 {
                     case CHECK_BOX_SET_FALSE:
@@ -115,6 +115,40 @@ public class SongOfSongListFragment extends Fragment {
     {
         songDataBase=SongDataBase.getDatabase(mainActivity);
         songDataBaseDao=songDataBase.SongDataBaseDao();
+        mainActivityViewModel=mainActivity.getMainActivityViewModel();
+
+        Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
+            @Override
+            public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)
+            {
+                List<SongEntity> songEntities;
+                songEntities=songDataBaseDao.getBySongList(nameOfSongList);
+                emitter.onNext(songEntities);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<List<SongEntity>>() {
+                    @Override
+                    public void accept(List<SongEntity> songs){
+                        songEntities=songs;
+                        viewModel.getCurrentData().setValue(songs);
+                        progressBar.setVisibility(View.GONE);
+                    }
+                }).subscribe();
+    }
+
+
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        songDataBase=SongDataBase.getDatabase(mainActivity);
+        songDataBaseDao=songDataBase.SongDataBaseDao();
+        mainActivity=(MainActivity)getActivity();
+        assert mainActivity != null;
+        mainActivityViewModel=mainActivity.getMainActivityViewModel();
+        final String nameOfSongList=mainActivityViewModel.getSongListEntity().getSongList();
 
 
         Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
@@ -132,15 +166,11 @@ public class SongOfSongListFragment extends Fragment {
                     public void accept(List<SongEntity> songs){
                         songEntities=songs;
                         viewModel.getCurrentData().setValue(songs);
-                        progressBar.setVisibility(View.INVISIBLE);
+                        progressBar.setVisibility(View.GONE);
                     }
                 }).subscribe();
+
     }
-
-
-
-
-
 
 
 

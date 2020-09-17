@@ -1,15 +1,13 @@
 package com.xiaoxin.netmusic2.recycler;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,11 +25,22 @@ import java.util.List;
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder>
         implements View.OnClickListener{
 
+    private final String TAG="SONG ADAPTER";
+
     private Context context;
     private List<SongEntity> dataList;
     private SongViewHolder viewHolder;
     private Bitmap playingBitmap;
     private Bitmap pauseBitmap;
+    private SongRecyclerViewModel viewModel;
+
+    public SongRecyclerViewModel getViewModel() {
+        return viewModel;
+    }
+
+    public void setViewModel(SongRecyclerViewModel viewModel) {
+        this.viewModel = viewModel;
+    }
 
     public SongAdapter()
     {
@@ -102,7 +111,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         holder.textViewForNameOfSinger.setText(singerOfSong==null?"":singerOfSong);
         holder.imageView.setTag(position);
         holder.checkBox.setTag(position);
-        holder.checkBox.setChecked(false);
+        holder.checkBox.setChecked(dataList.get(position).isCheckBoxChecked());
 
         setAlbumCover(holder,position);
     }
@@ -127,7 +136,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public interface SongRecyclerClickListener
     {
-        void onClick(View view,ViewNameSongRecyclerEnum viewName,int position);
+        void onClick(View view,ViewNameSongRecyclerEnum viewName,SongEntity entity);
     }
 
     @Override
@@ -143,26 +152,32 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                     if(bitmap.equals(playingBitmap))
                     {
                         viewHolder.imageView.setImageBitmap(pauseBitmap);
-                        clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_PLAY,position);
+                        clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_PLAY,dataList.get(position));
                     } else {
                         viewHolder.imageView.setImageBitmap(playingBitmap);
-                        clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_STOP,position);
+                        clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_STOP,dataList.get(position));
                     }
                     break;
                 case R.id.CheckBoxInRecyclerWidget:
-                    if (viewHolder.checkBox.isChecked())
+//                    if (viewHolder.checkBox.isChecked())
+                    if (dataList.get(position).isCheckBoxChecked())
                     {
+                        dataList.get(position).setCheckBoxChecked(false);
                         viewHolder.checkBox.setChecked(false);
-                        clickListener.onClick(view,ViewNameSongRecyclerEnum.CHECK_BOX_SET_FALSE,position);
+                        clickListener.onClick(view,ViewNameSongRecyclerEnum.CHECK_BOX_SET_FALSE,dataList.get(position));
+                        Log.d(TAG, "onClick: checkBox set false");
                     } else{
+                        dataList.get(position).setCheckBoxChecked(true);
                         viewHolder.checkBox.setChecked(true);
-                        clickListener.onClick(view,ViewNameSongRecyclerEnum.CHECK_BOX_SET_TRUE,position);
+                        clickListener.onClick(view,ViewNameSongRecyclerEnum.CHECK_BOX_SET_TRUE,dataList.get(position));
+                        Log.d(TAG, "onClick: checkBox set true");
                     }
                     break;
                 default:
                     break;
             }
         }
+        //viewModel.getCurrentData().setValue(dataList);
     }
 
     public enum ViewNameSongRecyclerEnum

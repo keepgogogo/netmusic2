@@ -25,13 +25,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final int FRAGMENT_OF_SONG_LIST=1;
-    public static final int FRAGMENT_OF_PLAYING=2;
+    public static final int FRAGMENT_OF_SONG_LIST=0;
+    public static final int FRAGMENT_OF_PLAYING=1;
 
     private BottomNavigationView navigationView;
     private FragmentManager fragmentManager;
     private List<Fragment> fragmentContainer;
     private MainActivityViewModel mainActivityViewModel;
+
+    private MediaService mediaService;
+    private MediaService.MyBinder myBinder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +45,23 @@ public class MainActivity extends AppCompatActivity {
 
         fragmentManager=getSupportFragmentManager();
         fragmentContainer=new ArrayList<>();
-        fragmentContainer.add(new SongListEditFragment());
-        fragmentContainer.add(new SongPlayingFragment());
+
+        Fragment songListEditFragment=new SongListEditFragment();
+        Fragment songPlayingFragment=new SongPlayingFragment();
+
+        fragmentContainer.add(songListEditFragment);
+        fragmentContainer.add(songPlayingFragment);
         initNavigation();
         setFragment(fragmentContainer.get(FRAGMENT_OF_SONG_LIST));
         mainActivityViewModel=new MainActivityViewModel();
+
+
+        mediaService=new MediaService();
+        myBinder=mediaService.getMyBinder();
+        mainActivityViewModel.setMyBinder(myBinder);
+        mainActivityViewModel.setMediaService(mediaService);
+
+
     }
 
 
@@ -121,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},2);
         }
     }
+
 
     public MainActivityViewModel getMainActivityViewModel() {
         return mainActivityViewModel;

@@ -15,11 +15,8 @@ public class SongListEditFragmentViewPagerAdapter extends FragmentStateAdapter {
     private AllSongListFragment allSongListFragment;
     private SongOfSongListFragment songOfSongListFragment;
 
-    public SongListEditFragmentViewPagerAdapter(Fragment fragment)
-    {
+    public SongListEditFragmentViewPagerAdapter(Fragment fragment) {
         super(fragment);
-        allSongListFragment=new AllSongListFragment();
-        songOfSongListFragment=new SongOfSongListFragment();
     }
 
     @NonNull
@@ -30,10 +27,10 @@ public class SongListEditFragmentViewPagerAdapter extends FragmentStateAdapter {
         switch (position)
         {
             case 0:
-                fragment=allSongListFragment;
+                fragment=new AllSongListFragment();;
                 break;
             case 1:
-                fragment=songOfSongListFragment;
+                fragment=new SongOfSongListFragment();
                 break;
             default:
                 break;

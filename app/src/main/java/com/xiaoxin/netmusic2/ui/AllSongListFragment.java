@@ -1,5 +1,6 @@
 package com.xiaoxin.netmusic2.ui;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -25,6 +27,7 @@ import com.xiaoxin.netmusic2.recycler.SongListRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -60,6 +63,9 @@ public class AllSongListFragment extends Fragment {
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
         progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInAllSongListFragment);
         progressBar.setVisibility(View.VISIBLE);
+
+        allSongList=new ArrayList<>();
+
         //初始化recyclerView
         initRecyclerView(view);
         //获取歌单列表
@@ -79,14 +85,21 @@ public class AllSongListFragment extends Fragment {
                 List<SongListEntity> songListEntities=songListDataBaseDao.loadAll();
                 emitter.onNext(songListEntities);
             }
-        }).doOnNext(new Consumer<List<SongListEntity>>() {
-            @Override
-            public void accept(List<SongListEntity> songListEntities){
-                allSongList=songListEntities;
-                viewModel.getCurrentData().setValue(allSongList);
-            }
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<List<SongListEntity>>() {
+                    @Override
+                    public void accept(List<SongListEntity> songListEntities){
+                        allSongList=songListEntities;
+                        if(allSongList!=null)
+                        {
+                            viewModel.getCurrentData().setValue(allSongList);
+                        } else {
+                            viewModel.getCurrentData().setValue(null);
+                        }
+                        progressBar.setVisibility(View.GONE);
+                    }
+                })
                 .subscribe();
     }
 
@@ -102,6 +115,7 @@ public class AllSongListFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         viewModel=new ViewModelProvider(this).get(SongListRecyclerViewModel.class);
         adapter=new SongListAdapter();
+        recyclerView.setAdapter(adapter);
 
         final Observer<List<SongListEntity>> ListOfSongsObserver= new Observer<List<SongListEntity>>() {
             @Override
@@ -111,7 +125,7 @@ public class AllSongListFragment extends Fragment {
             }
         };
 
-        viewModel.getCurrentData().observe(mainActivity,ListOfSongsObserver);
+        viewModel.getCurrentData().observe(getViewLifecycleOwner(),ListOfSongsObserver);
         adapter.setClickListener(new SongListAdapter.SongListRecyclerClickListener() {
             @Override
             public void onClick(View view, SongListAdapter.SongListRecyclerEnum viewName, int position) {
@@ -121,6 +135,8 @@ public class AllSongListFragment extends Fragment {
                         //todo
                         break;
                     case OPEN_SONG_LIST:
+                        //todo
+                        //viewpager自动切换
                         mainActivityViewModel.setSongListEntity(allSongList.get(position));
                         mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
                                         .createFragment(SongListEditFragmentViewPagerAdapter
