@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
@@ -21,6 +22,8 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+
+import static android.content.ContentValues.TAG;
 
 public class MediaService extends Service implements MediaPlayer.OnCompletionListener {
 
@@ -258,11 +261,13 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate: ");
         myBinder=new MyBinder();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand: ");
         return super.onStartCommand(intent, flags, startId);
     }
 

@@ -122,14 +122,15 @@ public class MainActivity extends AppCompatActivity {
         Intent bindIntent=new Intent(MainActivity.this,MediaService.class);
         bindService(bindIntent,connection,BIND_AUTO_CREATE);
 
-        myBinder.setDataBaseDao(songDataBaseDao);
-        mainActivityViewModel.setMyBinder(myBinder);
     }
 
     private ServiceConnection connection=new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             myBinder=(MediaService.MyBinder)iBinder;
+
+            myBinder.setDataBaseDao(songDataBaseDao);
+            mainActivityViewModel.setMyBinder(myBinder);
         }
 
         @Override
