@@ -12,9 +12,6 @@ public class SongListEditFragmentViewPagerAdapter extends FragmentStateAdapter {
     public static final int ALL_SONG_LIST_FRAGMENT=0;
     public static final int SONG_OF_SONG_LIST_FRAGMENT=1;
 
-    private AllSongListFragment allSongListFragment;
-    private SongOfSongListFragment songOfSongListFragment;
-
     public SongListEditFragmentViewPagerAdapter(Fragment fragment) {
         super(fragment);
     }

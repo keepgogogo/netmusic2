@@ -3,19 +3,32 @@ package com.xiaoxin.netmusic2;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.provider.SyncStateContract;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.RemoteViews;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.xiaoxin.netmusic2.database.SongDataBase;
+import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.ui.SongListEditFragment;
 import com.xiaoxin.netmusic2.ui.SongPlayingFragment;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
@@ -33,35 +46,87 @@ public class MainActivity extends AppCompatActivity {
     private List<Fragment> fragmentContainer;
     private MainActivityViewModel mainActivityViewModel;
 
-    private MediaService mediaService;
     private MediaService.MyBinder myBinder;
+    private SongDataBase songDataBase;
+    private SongDataBaseDao songDataBaseDao;
+    private NotificationManager notificationManager;
+    private RemoteViews remoteViews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        songDataBase=SongDataBase.getDatabase(this);
+        songDataBaseDao=songDataBase.SongDataBaseDao();
 
         getStorageAccess();
 
         fragmentManager=getSupportFragmentManager();
         fragmentContainer=new ArrayList<>();
-
-        Fragment songListEditFragment=new SongListEditFragment();
-        Fragment songPlayingFragment=new SongPlayingFragment();
-
-        fragmentContainer.add(songListEditFragment);
-        fragmentContainer.add(songPlayingFragment);
-        initNavigation();
+        fragmentContainer.add(new SongListEditFragment());
+        fragmentContainer.add(new SongPlayingFragment());
         setFragment(fragmentContainer.get(FRAGMENT_OF_SONG_LIST));
+
+        //设置BottomNavigationView
+        initNavigation();
+
         mainActivityViewModel=new MainActivityViewModel();
 
+        notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 
-        mediaService=new MediaService();
-        myBinder=mediaService.getMyBinder();
+        //设置notification
+//        setNotification();
+
+
+
+    }
+
+    /**
+     * 设置notification
+     */
+//    public void setNotification(){
+//        notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+//        NotificationCompat.Builder builder= new NotificationCompat.Builder(this,"NetMusic");
+//
+//        Intent intent = new Intent(this, MainActivity.class);
+//        // 点击跳转到主界面
+//        PendingIntent intent_go = PendingIntent.getActivity(this, 5, intent,
+//                PendingIntent.FLAG_UPDATE_CURRENT);
+//        remoteViews.setOnClickPendingIntent(R.id.notification, intent_go);
+//
+//        // 4个参数context, requestCode, intent, flags
+//        PendingIntent intent_close = PendingIntent.getActivity(this, 0, intent,
+//                PendingIntent.FLAG_UPDATE_CURRENT);
+//        remoteViews.setOnClickPendingIntent(R.id.CloseTheNotification, intent_close);
+//
+//        // 设置上一曲
+//        Intent prv = new Intent();
+//        prv.setAction(SyncStateContract.Constants.ACTION_PRV);
+//        PendingIntent intent_prev = PendingIntent.getBroadcast(this, 1, prv,
+//                PendingIntent.FLAG_UPDATE_CURRENT);
+//        remoteViews.setOnClickPendingIntent(R.id.LastSongInNotification, intent_prev);
+//    }
+
+    /**
+     * 设置播放服务
+     */
+    public void setMediaService(){
+        Intent startMediaService=new Intent(this, MediaService.class);
+        startService(startMediaService);
+
+        ServiceConnection connection=new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+                myBinder=(MediaService.MyBinder)iBinder;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+
+            }
+        };
+        myBinder.setDataBaseDao(songDataBaseDao);
         mainActivityViewModel.setMyBinder(myBinder);
-        mainActivityViewModel.setMediaService(mediaService);
-
-
     }
 
 
@@ -85,7 +150,11 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+//        if(navigationView.)
     }
+
+
 
     public void setFragment(Fragment fragment)
     {

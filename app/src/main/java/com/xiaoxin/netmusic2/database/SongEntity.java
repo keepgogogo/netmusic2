@@ -49,6 +49,17 @@ public class SongEntity {
     @Ignore
     private boolean isCheckBoxChecked;
 
+    @Ignore
+    private boolean isPlaying;
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
+    }
+
     public boolean isCheckBoxChecked() {
         return isCheckBoxChecked;
     }

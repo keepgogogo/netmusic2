@@ -13,6 +13,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.xiaoxin.netmusic2.MainActivity;
 import com.xiaoxin.netmusic2.R;
+import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
 
 public class SongListEditFragment extends Fragment {
@@ -21,6 +22,7 @@ public class SongListEditFragment extends Fragment {
     private ViewPager2 viewPager2;
     private SongListEditFragmentViewPagerAdapter adapter;
     private final String[] tabLabels={"歌单列表","歌单详情"};
+    private MainActivityViewModel mainActivityViewModel;
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
@@ -39,7 +41,8 @@ public class SongListEditFragment extends Fragment {
                 })).attach();
         mainActivity.getMainActivityViewModel().setSongListEditFragmentViewPagerAdapter(adapter);
         adapter.createFragment(SongListEditFragmentViewPagerAdapter.ALL_SONG_LIST_FRAGMENT);
-
+        mainActivityViewModel=mainActivity.getMainActivityViewModel();
+        mainActivityViewModel.setViewPager2(viewPager2);
     }
     public SongListEditFragment() {
         // Required empty public constructor

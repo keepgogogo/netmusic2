@@ -109,11 +109,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         songDataBase=SongDataBase.getDatabase(this);
         songDataBaseDao=songDataBase.SongDataBaseDao();
 
-        defaultAlbumBitmap=BitmapFactory.decodeResource(LocalSongsAddActivity.this.getResources(),
-                R.mipmap.default_cover);
-        defaultAlbumOutPutStream=new ByteArrayOutputStream();
-        defaultAlbumBitmap.compress(Bitmap.CompressFormat.JPEG,100,defaultAlbumOutPutStream);
-        defaultAlbumBytes=defaultAlbumOutPutStream.toByteArray();
+
 
         //通过rxjava2调用MediaStore读取本地歌曲
         loadSongs();
@@ -138,6 +134,14 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
             @Override
             public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)
             {
+
+                defaultAlbumBitmap=BitmapFactory.decodeResource(LocalSongsAddActivity.this.getResources(),
+                        R.mipmap.default_cover);
+                defaultAlbumOutPutStream=new ByteArrayOutputStream();
+                defaultAlbumBitmap.compress(Bitmap.CompressFormat.JPEG,100,defaultAlbumOutPutStream);
+                defaultAlbumBytes=defaultAlbumOutPutStream.toByteArray();
+
+
                 int i=1;
                 List<SongEntity> songEntities=new ArrayList<>();
                 fileLoader.startQuery();

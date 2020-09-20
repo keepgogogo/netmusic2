@@ -19,6 +19,9 @@ import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
+import com.xiaoxin.netmusic2.database.SongListDataBase;
+import com.xiaoxin.netmusic2.database.SongListDataBaseDao;
+import com.xiaoxin.netmusic2.database.SongListEntity;
 import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
@@ -155,9 +158,17 @@ public class SongOfSongListFragment extends Fragment {
             @Override
             public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)
             {
-                List<SongEntity> songEntities;
-                songEntities=songDataBaseDao.getBySongList(nameOfSongList);
-                emitter.onNext(songEntities);
+                if (nameOfSongList!=null){
+                    List<SongEntity> songEntities;
+                    songEntities=songDataBaseDao.getBySongList(nameOfSongList);
+                    emitter.onNext(songEntities);
+                }else{
+                    SongListDataBase songListDataBase=SongListDataBase.getDatabase(mainActivity);
+                    SongListDataBaseDao songListDataBaseDao=songListDataBase.SongListDataBaseDao();
+                    List<SongListEntity> entities=songListDataBaseDao.loadAll();
+                    emitter.onNext(songDataBaseDao.getBySongList(entities.get(0).getSongList()));
+                }
+
             }
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

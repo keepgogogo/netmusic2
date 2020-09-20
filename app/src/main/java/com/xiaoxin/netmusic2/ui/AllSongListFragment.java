@@ -16,9 +16,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiaoxin.netmusic2.MainActivity;
+import com.xiaoxin.netmusic2.MediaService;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
+import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListDataBase;
 import com.xiaoxin.netmusic2.database.SongListDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongListEntity;
@@ -54,6 +56,7 @@ public class AllSongListFragment extends Fragment {
     private MainActivity mainActivity;
     private List<SongListEntity> allSongList;
     private MainActivityViewModel mainActivityViewModel;
+
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
@@ -132,7 +135,11 @@ public class AllSongListFragment extends Fragment {
                 switch (viewName)
                 {
                     case PLAY_ALL_OF_THE_SONG_LIST:
-                        //todo
+                        mainActivityViewModel.setSongListEntity(allSongList.get(position));
+                        mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
+                                .createFragment(SongListEditFragmentViewPagerAdapter
+                                        .SONG_OF_SONG_LIST_FRAGMENT);
+
                         break;
                     case OPEN_SONG_LIST:
                         //todo
@@ -141,6 +148,7 @@ public class AllSongListFragment extends Fragment {
                         mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
                                         .createFragment(SongListEditFragmentViewPagerAdapter
                                                 .SONG_OF_SONG_LIST_FRAGMENT);
+                        mainActivityViewModel.getViewPager2().setCurrentItem(1,true);
                         break;
                     default:
                         break;
@@ -149,6 +157,28 @@ public class AllSongListFragment extends Fragment {
         });
     }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+        Observable.create(new ObservableOnSubscribe<List<SongListEntity>>() {
+            @Override
+            public void subscribe(ObservableEmitter<List<SongListEntity>> emitter) throws Exception {
+                songListDataBase=SongListDataBase.getDatabase(getActivity());
+                songListDataBaseDao=songListDataBase.SongListDataBaseDao();
+                emitter.onNext(songListDataBaseDao.loadAll());
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<List<SongListEntity>>() {
+                    @Override
+                    public void accept(List<SongListEntity> songListEntities) throws Exception {
+                        if(!allSongList.equals(songListEntities)){
+                            adapter.setDataList(songListEntities);
+                            viewModel.getCurrentData().setValue(songListEntities);
+                        }
+                    }
+                }).subscribe();
+    }
 
 
 

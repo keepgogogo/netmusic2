@@ -1,6 +1,7 @@
 package com.xiaoxin.netmusic2.viewmodel;
 
 import androidx.lifecycle.ViewModel;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.xiaoxin.netmusic2.MediaService;
 import com.xiaoxin.netmusic2.database.SongListEntity;
@@ -10,16 +11,18 @@ public class MainActivityViewModel extends ViewModel {
 
     private SongListEntity songListEntity;
     private SongListEditFragmentViewPagerAdapter songListEditFragmentViewPagerAdapter;
-    private MediaService mediaService;
+    private ViewPager2 viewPager2;
     private MediaService.MyBinder myBinder;
 
-    public MediaService getMediaService() {
-        return mediaService;
+    public ViewPager2 getViewPager2() {
+        return viewPager2;
     }
 
-    public void setMediaService(MediaService mediaService) {
-        this.mediaService = mediaService;
+    public void setViewPager2(ViewPager2 viewPager2) {
+        this.viewPager2 = viewPager2;
     }
+
+
 
     public MediaService.MyBinder getMyBinder() {
         return myBinder;
