@@ -56,7 +56,7 @@ public class AllSongListFragment extends Fragment {
     private MainActivity mainActivity;
     private List<SongListEntity> allSongList;
     private MainActivityViewModel mainActivityViewModel;
-
+    private MediaService.MyBinder serviceBinder;
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
@@ -68,6 +68,7 @@ public class AllSongListFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
 
         allSongList=new ArrayList<>();
+        serviceBinder=mainActivityViewModel.getMyBinder();
 
         //初始化recyclerView
         initRecyclerView(view);
@@ -139,7 +140,7 @@ public class AllSongListFragment extends Fragment {
                         mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
                                 .createFragment(SongListEditFragmentViewPagerAdapter
                                         .SONG_OF_SONG_LIST_FRAGMENT);
-
+                        serviceBinder.startPlayListByRank(allSongList.get(position));
                         break;
                     case OPEN_SONG_LIST:
                         //todo

@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiaoxin.netmusic2.MainActivity;
+import com.xiaoxin.netmusic2.MediaService;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
@@ -26,6 +27,7 @@ import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 
+import java.io.IOException;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -49,6 +51,7 @@ public class SongOfSongListFragment extends Fragment {
     private SongDataBaseDao songDataBaseDao;
 
     private List<SongEntity> songEntities;
+    private MediaService.MyBinder serviceBinder;
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
@@ -56,6 +59,7 @@ public class SongOfSongListFragment extends Fragment {
         mainActivity=(MainActivity)getActivity();
         assert mainActivity != null;
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
+        serviceBinder=mainActivityViewModel.getMyBinder();
 
         progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInSongOfSongListFragment);
         progressBar.setVisibility(View.VISIBLE);
@@ -78,6 +82,7 @@ public class SongOfSongListFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         viewModel=new ViewModelProvider(this).get(SongRecyclerViewModel.class);
         adapter=new SongAdapter();
+        adapter.setContext(mainActivity);
 
         final Observer<List<SongEntity>> ListOfSongsObserver= new Observer<List<SongEntity>>() {
             @Override
@@ -101,6 +106,13 @@ public class SongOfSongListFragment extends Fragment {
                         break;
                     case IMAGE_BUTTON_PLAY:
                         //TODO
+                        try {
+                            serviceBinder.playMidway(entity);
+                        }catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+
                         break;
                     case IMAGE_BUTTON_STOP:
                         //TODO

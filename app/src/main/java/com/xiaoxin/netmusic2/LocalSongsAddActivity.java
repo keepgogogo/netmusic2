@@ -16,6 +16,7 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -42,6 +43,7 @@ import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +84,9 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     private Bitmap defaultAlbumBitmap;
     private ByteArrayOutputStream defaultAlbumOutPutStream;
     private byte[] defaultAlbumBytes;
+
+    private MediaPlayer mediaPlayer;
+    private SongEntity underPlayingSong;
     
 
     @Override
@@ -325,6 +330,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         adapter=new SongAdapter();
         adapter.setContext(this);
         recyclerView.setAdapter(adapter);
+        mediaPlayer=new MediaPlayer();
 
         final Observer<List<SongEntity>> ListOfSongsObserver= new Observer<List<SongEntity>>() {
             @Override
@@ -344,16 +350,42 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
                         //todo
                         songsOfNewSongList.remove(entity);
                         break;
+
                     case CHECK_BOX_SET_TRUE:
                         //TODO
                         songsOfNewSongList.add(entity);
                         break;
+
                     case IMAGE_BUTTON_PLAY:
-                        //TODO
+                        if(underPlayingSong!=null){
+                            if(entity.equals(underPlayingSong)){
+                                mediaPlayer.start();
+                            }else {
+                                mediaPlayer.reset();
+                                underPlayingSong=entity;
+                                try {
+                                    mediaPlayer.setDataSource(entity.getPath());
+                                    mediaPlayer.start();
+                                }catch (IOException e){
+                                    e.printStackTrace();
+                                }
+                            }
+                        }else {
+                            mediaPlayer.reset();
+                            underPlayingSong=entity;
+                            try {
+                                mediaPlayer.setDataSource(entity.getPath());
+                                mediaPlayer.start();
+                            }catch (IOException e){
+                                e.printStackTrace();
+                            }
+                        }
                         break;
+
                     case IMAGE_BUTTON_STOP:
-                        //TODO
+                        mediaPlayer.pause();
                         break;
+
                     default:
                         break;
                 }

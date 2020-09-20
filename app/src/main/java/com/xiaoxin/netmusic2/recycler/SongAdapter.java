@@ -33,6 +33,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     private Bitmap playingBitmap;
     private Bitmap pauseBitmap;
     private SongRecyclerViewModel viewModel;
+    private ImageView lastSongImageView;
 
     public SongRecyclerViewModel getViewModel() {
         return viewModel;
@@ -109,6 +110,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         String singerOfSong=dataList.get(position).getArtist();
         holder.textViewForNameOfSong.setText(nameOfSong==null?"":nameOfSong);
         holder.textViewForNameOfSinger.setText(singerOfSong==null?"":singerOfSong);
+        holder.imageView.setImageBitmap(playingBitmap);
         holder.imageView.setTag(position);
         holder.checkBox.setTag(position);
         holder.checkBox.setChecked(dataList.get(position).isCheckBoxChecked());
@@ -152,9 +154,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                     if(bitmap.equals(playingBitmap))
                     {
                         viewHolder.imageView.setImageBitmap(pauseBitmap);
+                        lastSongImageView=viewHolder.imageView;
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_PLAY,dataList.get(position));
                     } else {
                         viewHolder.imageView.setImageBitmap(playingBitmap);
+                        lastSongImageView.setImageBitmap(pauseBitmap);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_STOP,dataList.get(position));
                     }
                     break;

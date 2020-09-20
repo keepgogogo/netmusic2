@@ -10,9 +10,7 @@ import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,7 +27,6 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
     public static final int PLAY_AS_RANK_OF_LIST=0;
     public static final int PLAY_BY_RANDOM=1;
 
-    private static final String TAG="MediaService";
     private List<SongEntity> songEntities;
     private SongListEntity songListEntity;
     private SongDataBaseDao songDataBaseDao;
@@ -38,34 +35,54 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
     private MyBinder myBinder=new MyBinder();
     private MediaPlayer mediaPlayer=new MediaPlayer();
 
+
     private int positionOfPlayingMusic;
     private ArrayList<Integer> arrangementOfSong;
 
-    public void playSong(SongEntity songEntity) throws IOException {
-        if(mediaPlayer.isPlaying()&&!isPaused){
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(songEntity.getPath());
-            mediaPlayer.start();
-        }else if(isPaused){
-            mediaPlayer.start();
-        }else {
-            mediaPlayer.setDataSource(songEntity.getPath());
-            mediaPlayer.start();
-        }
+    public void playSong(final SongEntity songEntity) throws IOException {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if(mediaPlayer.isPlaying()&&!isPaused){
+
+                    try {
+                        mediaPlayer.reset();
+                        mediaPlayer.setDataSource(songEntity.getPath());
+                        mediaPlayer.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }else if(isPaused){
+
+                    mediaPlayer.start();
+
+                }else {
+
+                    try {
+                        mediaPlayer.reset();
+                        mediaPlayer.setDataSource(songEntity.getPath());
+                        mediaPlayer.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }).start();
+
+
         isPaused=false;
     }
 
     public void nextSong(SongEntity songEntity)throws IOException {
-        mediaPlayer.reset();
-        mediaPlayer.setDataSource(songEntity.getPath());
-        mediaPlayer.start();
+        playSong(songEntity);
         isPaused=false;
     }
 
     public void lastSong(SongEntity songEntity)throws IOException{
-        mediaPlayer.reset();
-        mediaPlayer.setDataSource(songEntity.getPath());
-        mediaPlayer.start();
+        playSong(songEntity);
         isPaused=false;
     }
 
@@ -143,7 +160,6 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
                     public void accept(List<SongEntity> entities) throws Exception {
                         songEntities=entities;
                         playSong(songEntities.get(arrangementOfSong.get(0)));
-
                     }
                 }).subscribe();
     }
@@ -225,11 +241,24 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
             setSongDataBaseDao(songDataBaseDao);
         }
 
+        public SongEntity getUnderPlayingSong(){
+            return songEntities.get(arrangementOfSong.get(positionOfPlayingMusic));
+        }
+
+        public void endPlay(){
+            closeMediaPlayer();
+        }
+
+        public void playMidway(SongEntity songEntity) throws IOException {
+            playSong(songEntity);
+        }
+
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        myBinder=new MyBinder();
     }
 
     @Override

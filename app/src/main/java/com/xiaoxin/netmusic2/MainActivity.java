@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Fragment> fragmentContainer;
     private MainActivityViewModel mainActivityViewModel;
 
+    private MediaService mediaService;
     private MediaService.MyBinder myBinder;
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
@@ -71,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
         initNavigation();
 
         mainActivityViewModel=new MainActivityViewModel();
+
+        //设置播放服务
+        setMediaService();
 
         notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -111,23 +115,27 @@ public class MainActivity extends AppCompatActivity {
      * 设置播放服务
      */
     public void setMediaService(){
-        Intent startMediaService=new Intent(this, MediaService.class);
+        Intent startMediaService=new Intent(MainActivity.this, MediaService.class);
         startService(startMediaService);
 
-        ServiceConnection connection=new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-                myBinder=(MediaService.MyBinder)iBinder;
-            }
 
-            @Override
-            public void onServiceDisconnected(ComponentName componentName) {
+        Intent bindIntent=new Intent(MainActivity.this,MediaService.class);
+        bindService(bindIntent,connection,BIND_AUTO_CREATE);
 
-            }
-        };
         myBinder.setDataBaseDao(songDataBaseDao);
         mainActivityViewModel.setMyBinder(myBinder);
     }
+
+    private ServiceConnection connection=new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            myBinder=(MediaService.MyBinder)iBinder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+        }
+    };
 
 
     //对导航栏进行初始化，设置点击事件
@@ -170,6 +178,14 @@ public class MainActivity extends AppCompatActivity {
     {
         getMenuInflater().inflate(R.menu.menu_of_main_activity,menu);
         return true;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(MainActivity.this, MediaService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
 
     @Override

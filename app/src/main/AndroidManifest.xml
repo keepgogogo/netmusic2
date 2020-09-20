@@ -14,8 +14,7 @@
         android:theme="@style/AppTheme">
         <service
             android:name=".MediaService"
-            android:enabled="true"
-            android:exported="true" />
+            android:enabled="true" />
 
         <activity android:name=".LocalSongsAddActivity" />
         <activity android:name=".MainActivity">
