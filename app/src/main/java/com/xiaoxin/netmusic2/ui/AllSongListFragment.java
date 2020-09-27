@@ -1,6 +1,5 @@
 package com.xiaoxin.netmusic2.ui;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -20,7 +18,6 @@ import com.xiaoxin.netmusic2.MediaService;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
-import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListDataBase;
 import com.xiaoxin.netmusic2.database.SongListDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongListEntity;
@@ -48,7 +45,7 @@ public class AllSongListFragment extends Fragment {
     private SongDataBaseDao songDataBaseDao;
 
     private SongListAdapter adapter;
-    private SongListRecyclerViewModel viewModel;
+    private SongListRecyclerViewModel songListRecyclerViewModel;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
@@ -61,20 +58,29 @@ public class AllSongListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
     {
-        mainActivity=(MainActivity)getActivity();
-        assert mainActivity != null;
-        mainActivityViewModel=mainActivity.getMainActivityViewModel();
-        progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInAllSongListFragment);
-        progressBar.setVisibility(View.VISIBLE);
 
-        allSongList=new ArrayList<>();
-        serviceBinder=mainActivityViewModel.getMyBinder();
 
+        initUI(view);
+
+        initDataEvents();
         //初始化recyclerView
         initRecyclerView(view);
         //获取歌单列表
         loadSongListEntities();
 
+    }
+
+    public void initDataEvents(){
+        mainActivity=(MainActivity)getActivity();
+        assert mainActivity != null;
+        mainActivityViewModel=mainActivity.getMainActivityViewModel();
+        allSongList=new ArrayList<>();
+        serviceBinder=mainActivityViewModel.getMyBinder();
+    }
+
+    public void initUI(View view){
+        progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInAllSongListFragment);
+        progressBar.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -97,9 +103,9 @@ public class AllSongListFragment extends Fragment {
                         allSongList=songListEntities;
                         if(allSongList!=null)
                         {
-                            viewModel.getCurrentData().setValue(allSongList);
+                            songListRecyclerViewModel.getCurrentData().setValue(allSongList);
                         } else {
-                            viewModel.getCurrentData().setValue(null);
+                            songListRecyclerViewModel.getCurrentData().setValue(null);
                         }
                         progressBar.setVisibility(View.GONE);
                     }
@@ -117,7 +123,7 @@ public class AllSongListFragment extends Fragment {
         layoutManager=new LinearLayoutManager(mainActivity);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
-        viewModel=new ViewModelProvider(this).get(SongListRecyclerViewModel.class);
+        songListRecyclerViewModel =new ViewModelProvider(this).get(SongListRecyclerViewModel.class);
         adapter=new SongListAdapter();
         recyclerView.setAdapter(adapter);
 
@@ -129,7 +135,7 @@ public class AllSongListFragment extends Fragment {
             }
         };
 
-        viewModel.getCurrentData().observe(getViewLifecycleOwner(),ListOfSongsObserver);
+        songListRecyclerViewModel.getCurrentData().observe(getViewLifecycleOwner(),ListOfSongsObserver);
         adapter.setClickListener(new SongListAdapter.SongListRecyclerClickListener() {
             @Override
             public void onClick(View view, SongListAdapter.SongListRecyclerEnum viewName, int position) {
@@ -175,7 +181,8 @@ public class AllSongListFragment extends Fragment {
                     public void accept(List<SongListEntity> songListEntities) throws Exception {
                         if(!allSongList.equals(songListEntities)){
                             adapter.setDataList(songListEntities);
-                            viewModel.getCurrentData().setValue(songListEntities);
+                            allSongList=songListEntities;
+                            songListRecyclerViewModel.getCurrentData().setValue(songListEntities);
                         }
                     }
                 }).subscribe();

@@ -40,7 +40,7 @@ import io.reactivex.schedulers.Schedulers;
 public class SongOfSongListFragment extends Fragment {
 
     private SongAdapter adapter;
-    private SongRecyclerViewModel viewModel;
+    private SongRecyclerViewModel songRecyclerViewModel;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
@@ -65,7 +65,7 @@ public class SongOfSongListFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
 
         //获取歌曲列表
-        loadSongEntities(mainActivityViewModel.getSongListEntity().getSongList());
+        loadSongEntities();
 
         //初始化recyclerView
         initRecyclerView(view);
@@ -80,7 +80,7 @@ public class SongOfSongListFragment extends Fragment {
         layoutManager=new LinearLayoutManager(mainActivity);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
-        viewModel=new ViewModelProvider(this).get(SongRecyclerViewModel.class);
+        songRecyclerViewModel =new ViewModelProvider(this).get(SongRecyclerViewModel.class);
         adapter=new SongAdapter();
         adapter.setContext(mainActivity);
 
@@ -92,7 +92,7 @@ public class SongOfSongListFragment extends Fragment {
             }
         };
 
-        viewModel.getCurrentData().observe(mainActivity,ListOfSongsObserver);
+        songRecyclerViewModel.getCurrentData().observe(mainActivity,ListOfSongsObserver);
         adapter.setClickListener(new SongAdapter.SongRecyclerClickListener() {
             @Override
             public void onClick(View view, SongAdapter.ViewNameSongRecyclerEnum viewName, SongEntity entity) {
@@ -126,8 +126,10 @@ public class SongOfSongListFragment extends Fragment {
 
     //获取歌曲列表
     @SuppressLint("CheckResult")
-    public void loadSongEntities(final String nameOfSongList)
+    public void loadSongEntities()
     {
+        final String nameOfSongList=mainActivityViewModel.getSongListEntity().getSongList();
+        if (nameOfSongList==null || nameOfSongList.length()==0)return;
         songDataBase=SongDataBase.getDatabase(mainActivity);
         songDataBaseDao=songDataBase.SongDataBaseDao();
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
@@ -146,7 +148,7 @@ public class SongOfSongListFragment extends Fragment {
                     @Override
                     public void accept(List<SongEntity> songs){
                         songEntities=songs;
-                        viewModel.getCurrentData().setValue(songs);
+                        songRecyclerViewModel.getCurrentData().setValue(songs);
                         progressBar.setVisibility(View.GONE);
                     }
                 }).subscribe();
@@ -188,7 +190,7 @@ public class SongOfSongListFragment extends Fragment {
                     @Override
                     public void accept(List<SongEntity> songs){
                         songEntities=songs;
-                        viewModel.getCurrentData().setValue(songs);
+                        songRecyclerViewModel.getCurrentData().setValue(songs);
                         progressBar.setVisibility(View.GONE);
                     }
                 }).subscribe();

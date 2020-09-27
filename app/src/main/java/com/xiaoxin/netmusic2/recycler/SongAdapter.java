@@ -3,7 +3,6 @@ package com.xiaoxin.netmusic2.recycler;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +19,8 @@ import com.xiaoxin.netmusic2.database.SongEntity;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.List;
 
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder>
@@ -29,11 +30,10 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     private Context context;
     private List<SongEntity> dataList;
-    private SongViewHolder viewHolder;
-    private Bitmap playingBitmap;
-    private Bitmap pauseBitmap;
+    private byte[] playImageByte;
+    private byte[] pauseImageByte;
     private SongRecyclerViewModel viewModel;
-    private ImageView lastSongImageView;
+    private int lastPlayPosition=-1;
 
     public SongRecyclerViewModel getViewModel() {
         return viewModel;
@@ -50,9 +50,24 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public void setContext(Context context){
         this.context=context;
-        playingBitmap= BitmapFactory.decodeResource(this.context.getResources(),R.mipmap.ic_play_bar_btn_play);
-        pauseBitmap=BitmapFactory.decodeResource(this.context.getResources(),R.mipmap.ic_play_bar_btn_pause);
+        playImageByte =getPlayImageBytes();
+        pauseImageByte=getPauseImageBytes();
     }
+
+    public byte[] getPlayImageBytes(){
+        Bitmap tempBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
+        return outputStream.toByteArray();
+    }
+
+    public byte[] getPauseImageBytes(){
+        Bitmap tempBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
+        return outputStream.toByteArray();
+    }
+
 
     public void setDataList(List<SongEntity> mData) {
         this.dataList = mData;
@@ -87,8 +102,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
             checkBox.setOnClickListener(SongAdapter.this);
             imageView.setOnClickListener(SongAdapter.this);
-
-            viewHolder=SongViewHolder.this;
         }
     }
 
@@ -110,12 +123,22 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         String singerOfSong=dataList.get(position).getArtist();
         holder.textViewForNameOfSong.setText(nameOfSong==null?"":nameOfSong);
         holder.textViewForNameOfSinger.setText(singerOfSong==null?"":singerOfSong);
-        holder.imageView.setImageBitmap(playingBitmap);
+        holder.imageView.setImageBitmap(getPlayImageBitmap(position));
         holder.imageView.setTag(position);
         holder.checkBox.setTag(position);
         holder.checkBox.setChecked(dataList.get(position).isCheckBoxChecked());
 
         setAlbumCover(holder,position);
+    }
+
+    public Bitmap getPlayImageBitmap(int position){
+        byte[] temp=dataList.get(position).getPlayImagePicture();
+        return BitmapFactory.decodeByteArray(temp,0,temp.length-1);
+    }
+
+    public Bitmap getAlbumBitmap(SongEntity songEntity){
+        byte[] temp=songEntity.getAlbumPicture();
+        return BitmapFactory.decodeByteArray(temp,0,temp.length-1);
     }
 
     public void setAlbumCover(SongViewHolder holder,int position)
@@ -150,29 +173,30 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             switch (view.getId())
             {
                 case R.id.ImageButtonForPlayInRecyclerWidget:
-                    Bitmap bitmap=((BitmapDrawable)viewHolder.imageView.getDrawable()).getBitmap();
-                    if(bitmap.equals(playingBitmap))
+                    if(Arrays.equals(dataList.get(position).getPlayImagePicture(), playImageByte))
                     {
-                        viewHolder.imageView.setImageBitmap(pauseBitmap);
-                        lastSongImageView=viewHolder.imageView;
+                        dataList.get(position).setPlayImagePicture(pauseImageByte);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_PLAY,dataList.get(position));
-                    } else {
-                        viewHolder.imageView.setImageBitmap(playingBitmap);
-                        lastSongImageView.setImageBitmap(pauseBitmap);
+                    }else {
+                        dataList.get(position).setPlayImagePicture(playImageByte);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_STOP,dataList.get(position));
                     }
+                    notifyItemChanged(position);
+
+                    //如果上个被播放的歌曲没有点暂停直接选了另一首来播放
+                    lastPlayedItemReset(position);
+
                     break;
                 case R.id.CheckBoxInRecyclerWidget:
-//                    if (viewHolder.checkBox.isChecked())
                     if (dataList.get(position).isCheckBoxChecked())
                     {
                         dataList.get(position).setCheckBoxChecked(false);
-                        viewHolder.checkBox.setChecked(false);
+                        notifyItemChanged(position);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.CHECK_BOX_SET_FALSE,dataList.get(position));
                         Log.d(TAG, "onClick: checkBox set false");
                     } else{
                         dataList.get(position).setCheckBoxChecked(true);
-                        viewHolder.checkBox.setChecked(true);
+                        notifyItemChanged(position);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.CHECK_BOX_SET_TRUE,dataList.get(position));
                         Log.d(TAG, "onClick: checkBox set true");
                     }
@@ -182,6 +206,14 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             }
         }
         //viewModel.getCurrentData().setValue(dataList);
+    }
+
+    public void lastPlayedItemReset(int position){
+        if (lastPlayPosition!=-1&&lastPlayPosition!=position){
+            dataList.get(lastPlayPosition).setPlayImagePicture(playImageByte);
+            notifyItemChanged(lastPlayPosition);
+        }
+        lastPlayPosition=position;
     }
 
     public enum ViewNameSongRecyclerEnum

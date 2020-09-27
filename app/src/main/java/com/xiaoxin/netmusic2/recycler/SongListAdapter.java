@@ -20,7 +20,6 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
         implements View.OnClickListener {
     private Context context;
     private List<SongListEntity> dataList;
-    private SongListViewHolder viewHolder;
 
     public void setContext(Context context) {
         this.context = context;
@@ -54,10 +53,8 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
             textViewForSongListName=(TextView)itemView.findViewById(R.id.TextViewSongListNameInSongListRecycler);
             textViewForSongListCount=(TextView)itemView.findViewById(R.id.TextViewForSongNumberInSongListRecycler);
             imageViewAndPlayAll=(ImageView)itemView.findViewById(R.id.ImageButtonForPlayInSongListRecycler);
-
             cardView.setOnClickListener(SongListAdapter.this);
             imageViewAndPlayAll.setOnClickListener(SongListAdapter.this);
-            viewHolder=SongListViewHolder.this;
         }
     }
 

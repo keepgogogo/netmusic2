@@ -38,19 +38,40 @@ public class SongEntity {
     @ColumnInfo
     private int duration;
 
-
     //歌单名
     @ColumnInfo
     private String songList;
 
     @ColumnInfo
+    private long albumID;
+
+    @ColumnInfo
     private byte[] albumPicture;
+
+    @ColumnInfo
+    private byte[] playImagePicture;
 
     @Ignore
     private boolean isCheckBoxChecked;
 
     @Ignore
     private boolean isPlaying;
+
+    public long getAlbumID() {
+        return albumID;
+    }
+
+    public void setAlbumID(long albumID) {
+        this.albumID = albumID;
+    }
+
+    public byte[] getPlayImagePicture() {
+        return playImagePicture;
+    }
+
+    public void setPlayImagePicture(byte[] playImagePicture) {
+        this.playImagePicture = playImagePicture;
+    }
 
     public boolean isPlaying() {
         return isPlaying;
@@ -74,6 +95,7 @@ public class SongEntity {
         duration=song.getDuration();
         size=song.getSize();
         name=song.getName();
+        albumID=song.getAlbumId();
     }
 
     public String getSongList() {

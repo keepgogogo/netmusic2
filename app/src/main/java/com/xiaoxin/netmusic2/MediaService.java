@@ -1,11 +1,9 @@
 package com.xiaoxin.netmusic2;
 
-import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
@@ -23,9 +21,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-import static android.content.ContentValues.TAG;
 
-public class MediaService extends Service implements MediaPlayer.OnCompletionListener {
+public class MediaService implements MediaPlayer.OnPreparedListener  {
 
     public static final int PLAY_AS_RANK_OF_LIST=0;
     public static final int PLAY_BY_RANDOM=1;
@@ -52,7 +49,7 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
                     try {
                         mediaPlayer.reset();
                         mediaPlayer.setDataSource(songEntity.getPath());
-                        mediaPlayer.start();
+                        mediaPlayer.prepare();//todo
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -190,23 +187,27 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
     public MediaService() {
     }
 
-    @Override
     public IBinder onBind(Intent intent) {
         return myBinder;
     }
 
     @Override
-    public void onCompletion(MediaPlayer mediaPlayer) {
-        try {
-            if(positionOfPlayingMusic==songEntities.size()-1){
-                positionOfPlayingMusic=0;
-                playSong(songEntities.get(arrangementOfSong.get(positionOfPlayingMusic)));
-            }
-            playSong(songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic)));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void onPrepared(MediaPlayer mediaPlayer) {
+        mediaPlayer.start();
     }
+//
+//    @Override
+//    public void onCompletion(MediaPlayer mediaPlayer) {
+//        try {
+//            if(positionOfPlayingMusic==songEntities.size()-1){
+//                positionOfPlayingMusic=0;
+//                playSong(songEntities.get(arrangementOfSong.get(positionOfPlayingMusic)));
+//            }
+//            playSong(songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic)));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public class MyBinder extends Binder{
         public void startPlayListByRank(SongListEntity songListEntity){
@@ -258,21 +259,4 @@ public class MediaService extends Service implements MediaPlayer.OnCompletionLis
 
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.d(TAG, "onCreate: ");
-        myBinder=new MyBinder();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand: ");
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
 }

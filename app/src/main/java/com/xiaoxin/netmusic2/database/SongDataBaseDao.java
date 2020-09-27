@@ -14,8 +14,8 @@ public interface SongDataBaseDao {
     @Insert
     void insert(SongEntity ... songEntities);
 
-    @Insert
-    void insert(List<SongEntity> entities);
+//    @Insert
+//    void insert(List<SongEntity> entities);
 
 
     @Query("SELECT * FROM SongOfList")
@@ -27,6 +27,9 @@ public interface SongDataBaseDao {
     @Query("SELECT * FROM SongOfList WHERE artist =:artist")
     List<SongEntity> getByArtist(String artist);
 
+    @Query("DELETE FROM SongOfList WHERE songList=:songList ")
+    void deleteBySongList(String songList);
+
 //    @Query("SELECT * FROM SongOfList WHERE name =:nameOfSong")
 //    List<Song> getByName(String nameOfSong);
 
@@ -35,4 +38,7 @@ public interface SongDataBaseDao {
 
     @Update
     void update(SongEntity ... songEntities);
+//
+//    @Update
+//    void update(List<SongEntity> songEntities);
 }
