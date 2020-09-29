@@ -98,8 +98,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             checkBox=(CheckBox)itemView.findViewById(R.id.CheckBoxInRecyclerWidget);
             imageView=(ImageView)itemView.findViewById(R.id.ImageButtonForPlayInRecyclerWidget);
             imageViewForAlbumCover=(ImageView)itemView.findViewById(R.id.ImageViewForAlbumCoverInRecyclerWidget);
-
-
             checkBox.setOnClickListener(SongAdapter.this);
             imageView.setOnClickListener(SongAdapter.this);
         }
@@ -223,6 +221,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         IMAGE_BUTTON_PLAY,
         IMAGE_BUTTON_STOP
     }
+
+    public byte[] getPauseImageByte(){
+        return pauseImageByte;
+    }
+
 
 
 

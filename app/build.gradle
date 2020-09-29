@@ -69,4 +69,5 @@ dependencies {
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'com.github.thinkcool:circletextimageview:1.0.20151218'
 
+
 }

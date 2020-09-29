@@ -1,6 +1,7 @@
 package com.xiaoxin.netmusic2.ui;
 
-import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiaoxin.netmusic2.MainActivity;
-import com.xiaoxin.netmusic2.MediaService;
+import com.xiaoxin.netmusic2.MediaManager;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
@@ -27,6 +28,7 @@ import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -51,7 +53,7 @@ public class SongOfSongListFragment extends Fragment {
     private SongDataBaseDao songDataBaseDao;
 
     private List<SongEntity> songEntities;
-    private MediaService.MyBinder serviceBinder;
+    private MediaManager.MediaEasyController mediaEasyController;
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
@@ -59,16 +61,17 @@ public class SongOfSongListFragment extends Fragment {
         mainActivity=(MainActivity)getActivity();
         assert mainActivity != null;
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
-        serviceBinder=mainActivityViewModel.getMyBinder();
+        mediaEasyController=mainActivityViewModel.getMediaEasyController();
 
         progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInSongOfSongListFragment);
         progressBar.setVisibility(View.VISIBLE);
 
-        //获取歌曲列表
-        loadSongEntities();
+
 
         //初始化recyclerView
         initRecyclerView(view);
+        //获取歌曲列表
+        loadSongEntities();
 
 
     }
@@ -107,7 +110,7 @@ public class SongOfSongListFragment extends Fragment {
                     case IMAGE_BUTTON_PLAY:
                         //TODO
                         try {
-                            serviceBinder.playMidway(entity);
+                            mediaEasyController.playMidway(entity);
                         }catch (IOException e)
                         {
                             e.printStackTrace();
@@ -125,10 +128,9 @@ public class SongOfSongListFragment extends Fragment {
     }
 
     //获取歌曲列表
-    @SuppressLint("CheckResult")
     public void loadSongEntities()
     {
-        final String nameOfSongList=mainActivityViewModel.getSongListEntity().getSongList();
+        final String nameOfSongList=mainActivityViewModel.getUnderPlayingSongList().getSongList();
         if (nameOfSongList==null || nameOfSongList.length()==0)return;
         songDataBase=SongDataBase.getDatabase(mainActivity);
         songDataBaseDao=songDataBase.SongDataBaseDao();
@@ -150,8 +152,41 @@ public class SongOfSongListFragment extends Fragment {
                         songEntities=songs;
                         songRecyclerViewModel.getCurrentData().setValue(songs);
                         progressBar.setVisibility(View.GONE);
+                        loadUnderPlaySong();
                     }
                 }).subscribe();
+    }
+
+    public void loadUnderPlaySong(){
+        SongEntity underPlaySong=mediaEasyController.getUnderPlayingSongEntity();
+        if(underPlaySong!=null){
+            int indexOfUnderPlaySong=getIndexOfSongEntityFromList(adapter.getDataList(),underPlaySong);
+            if (indexOfUnderPlaySong!=-1){
+                underPlaySong.setPlayImagePicture(getPauseImageBytes());
+                songEntities.remove(indexOfUnderPlaySong);
+                songEntities.add(indexOfUnderPlaySong,underPlaySong);
+                adapter.setDataList(songEntities);
+                songRecyclerViewModel.getCurrentData().setValue(songEntities);
+            }
+        }
+    }
+
+    public int getIndexOfSongEntityFromList(List<SongEntity> entityList, SongEntity entity){
+        String name=entity.getName();
+        for(int i=0;i<entityList.size();i++){
+            if (entityList.get(i).getName()
+                    .equals(name)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public byte[] getPauseImageBytes(){
+        Bitmap tempBitmap=BitmapFactory.decodeResource(mainActivity.getResources(),R.mipmap.ic_play_bar_btn_pause);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
+        return outputStream.toByteArray();
     }
 
 
@@ -165,7 +200,7 @@ public class SongOfSongListFragment extends Fragment {
         mainActivity=(MainActivity)getActivity();
         assert mainActivity != null;
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
-        final String nameOfSongList=mainActivityViewModel.getSongListEntity().getSongList();
+        final String nameOfSongList=mainActivityViewModel.getUnderPlayingSongList().getSongList();
 
 
         Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
@@ -192,6 +227,7 @@ public class SongOfSongListFragment extends Fragment {
                         songEntities=songs;
                         songRecyclerViewModel.getCurrentData().setValue(songs);
                         progressBar.setVisibility(View.GONE);
+                        loadUnderPlaySong();
                     }
                 }).subscribe();
 

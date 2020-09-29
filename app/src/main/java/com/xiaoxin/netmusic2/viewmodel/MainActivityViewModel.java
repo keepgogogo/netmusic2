@@ -3,16 +3,33 @@ package com.xiaoxin.netmusic2.viewmodel;
 import androidx.lifecycle.ViewModel;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.xiaoxin.netmusic2.MediaService;
+import com.xiaoxin.netmusic2.MediaManager;
+import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
 
 public class MainActivityViewModel extends ViewModel {
 
-    private SongListEntity songListEntity;
+    private SongListEntity underPlayingSongList;
+    private SongEntity underPlayingSongEntity;
     private SongListEditFragmentViewPagerAdapter songListEditFragmentViewPagerAdapter;
     private ViewPager2 viewPager2;
-    private MediaService.MyBinder myBinder;
+    private MediaManager mediaManager;
+    private MediaManager.MediaEasyController mediaEasyController;
+
+    public MediaManager getMediaManager() {
+        return mediaManager;
+    }
+
+    public void setMediaManager(MediaManager mediaManager) {
+        this.mediaManager = mediaManager;
+        mediaEasyController=mediaManager.getMediaEasyController();
+    }
+
+
+    public MediaManager.MediaEasyController getMediaEasyController(){
+        return mediaEasyController;
+    }
 
     public ViewPager2 getViewPager2() {
         return viewPager2;
@@ -22,15 +39,6 @@ public class MainActivityViewModel extends ViewModel {
         this.viewPager2 = viewPager2;
     }
 
-
-
-    public MediaService.MyBinder getMyBinder() {
-        return myBinder;
-    }
-
-    public void setMyBinder(MediaService.MyBinder myBinder) {
-        this.myBinder = myBinder;
-    }
 
     public SongListEditFragmentViewPagerAdapter getSongListEditFragmentViewPagerAdapter() {
         return songListEditFragmentViewPagerAdapter;
@@ -43,14 +51,22 @@ public class MainActivityViewModel extends ViewModel {
 
     public MainActivityViewModel(){
         super();
-        songListEntity=new SongListEntity();
+        underPlayingSongList =new SongListEntity();
     }
 
-    public SongListEntity getSongListEntity() {
-        return songListEntity;
+    public SongListEntity getUnderPlayingSongList() {
+        return underPlayingSongList;
     }
 
-    public void setSongListEntity(SongListEntity songListEntity) {
-        this.songListEntity = songListEntity;
+    public void setUnderPlayingSongList(SongListEntity underPlayingSongList) {
+        this.underPlayingSongList = underPlayingSongList;
+    }
+
+    public SongEntity getUnderPlayingSongEntity() {
+        return underPlayingSongEntity;
+    }
+
+    public void setUnderPlayingSongEntity(SongEntity underPlayingSongEntity) {
+        this.underPlayingSongEntity = underPlayingSongEntity;
     }
 }

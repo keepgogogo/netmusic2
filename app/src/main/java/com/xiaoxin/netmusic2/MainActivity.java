@@ -3,25 +3,17 @@ package com.xiaoxin.netmusic2;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.provider.SyncStateContract;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.RemoteViews;
@@ -46,8 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private List<Fragment> fragmentContainer;
     private MainActivityViewModel mainActivityViewModel;
 
-    private MediaService mediaService;
-    private MediaService.MyBinder myBinder;
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
     private NotificationManager notificationManager;
@@ -67,7 +57,8 @@ public class MainActivity extends AppCompatActivity {
         initNavigation();
 
         mainActivityViewModel=new MainActivityViewModel();
-
+        mainActivityViewModel.setMediaManager(new MediaManager());
+        mainActivityViewModel.getMediaManager().setSongDataBaseDao(songDataBaseDao);
 //        //设置播放服务
 //        setMediaService();
 
@@ -118,11 +109,11 @@ public class MainActivity extends AppCompatActivity {
      * 设置播放服务
      */
 //    public void setMediaService(){
-//        Intent startMediaService=new Intent(MainActivity.this, MediaService.class);
+//        Intent startMediaService=new Intent(MainActivity.this, MediaManager.class);
 //        startService(startMediaService);
 //
 //
-//        Intent bindIntent=new Intent(MainActivity.this,MediaService.class);
+//        Intent bindIntent=new Intent(MainActivity.this,MediaManager.class);
 //        bindService(bindIntent,connection,BIND_AUTO_CREATE);
 //
 //    }
@@ -130,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 //    private ServiceConnection connection=new ServiceConnection() {
 //        @Override
 //        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-//            myBinder=(MediaService.MyBinder)iBinder;
+//            myBinder=(MediaManager.MyBinder)iBinder;
 //
 //            myBinder.setDataBaseDao(songDataBaseDao);
 //            mainActivityViewModel.setMyBinder(myBinder);
@@ -188,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
 //    protected void onStart() {
 //        super.onStart();
 //        // Bind to LocalService
-//        Intent intent = new Intent(MainActivity.this, MediaService.class);
+//        Intent intent = new Intent(MainActivity.this, MediaManager.class);
 //        bindService(intent, connection, Context.BIND_AUTO_CREATE);
 //    }
 

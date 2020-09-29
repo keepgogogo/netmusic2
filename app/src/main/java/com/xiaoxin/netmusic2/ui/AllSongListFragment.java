@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiaoxin.netmusic2.MainActivity;
-import com.xiaoxin.netmusic2.MediaService;
+import com.xiaoxin.netmusic2.MediaManager;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
@@ -26,6 +26,7 @@ import com.xiaoxin.netmusic2.recycler.SongListRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +54,7 @@ public class AllSongListFragment extends Fragment {
     private MainActivity mainActivity;
     private List<SongListEntity> allSongList;
     private MainActivityViewModel mainActivityViewModel;
-    private MediaService.MyBinder serviceBinder;
+    private MediaManager.MediaEasyController mediaEasyController;
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
@@ -75,7 +76,7 @@ public class AllSongListFragment extends Fragment {
         assert mainActivity != null;
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
         allSongList=new ArrayList<>();
-        serviceBinder=mainActivityViewModel.getMyBinder();
+        mediaEasyController=mainActivityViewModel.getMediaEasyController();
     }
 
     public void initUI(View view){
@@ -125,6 +126,7 @@ public class AllSongListFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         songListRecyclerViewModel =new ViewModelProvider(this).get(SongListRecyclerViewModel.class);
         adapter=new SongListAdapter();
+        adapter.setContext(mainActivity);
         recyclerView.setAdapter(adapter);
 
         final Observer<List<SongListEntity>> ListOfSongsObserver= new Observer<List<SongListEntity>>() {
@@ -138,30 +140,78 @@ public class AllSongListFragment extends Fragment {
         songListRecyclerViewModel.getCurrentData().observe(getViewLifecycleOwner(),ListOfSongsObserver);
         adapter.setClickListener(new SongListAdapter.SongListRecyclerClickListener() {
             @Override
-            public void onClick(View view, SongListAdapter.SongListRecyclerEnum viewName, int position) {
+            public void onClick(View view, SongListAdapter.SongListRecyclerEnum viewName, int position){
                 switch (viewName)
                 {
                     case PLAY_ALL_OF_THE_SONG_LIST:
-                        mainActivityViewModel.setSongListEntity(allSongList.get(position));
-                        mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
-                                .createFragment(SongListEditFragmentViewPagerAdapter
-                                        .SONG_OF_SONG_LIST_FRAGMENT);
-                        serviceBinder.startPlayListByRank(allSongList.get(position));
+                        if (mediaEasyController.getUnderPlayingSongEntity()==null){
+                            startSongListPlay(position);
+                        }
+                        else if (allSongList.get(position).getSongList()
+                                .equals(mediaEasyController.getUnderPlayingSongEntity().getSongList())){
+                            try {
+                                mediaEasyController.startPlay();
+                            }catch (IOException e){
+                                e.printStackTrace();
+                            }
+                        }else {
+                            startSongListPlay(position);
+                        }
+                        mainActivityViewModel.setUnderPlayingSongList(allSongList.get(position));
+                        setSongListItemPlayImage();
+                        break;
+                    case PAUSE_ALL_OF_THE_SONG_LIST:
+                        mediaEasyController.pausePlay();
                         break;
                     case OPEN_SONG_LIST:
                         //todo
                         //viewpager自动切换
-                        mainActivityViewModel.setSongListEntity(allSongList.get(position));
-                        mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
-                                        .createFragment(SongListEditFragmentViewPagerAdapter
-                                                .SONG_OF_SONG_LIST_FRAGMENT);
-                        mainActivityViewModel.getViewPager2().setCurrentItem(1,true);
+                        viewPagerChangeToSongFragment(position);
                         break;
                     default:
                         break;
                 }
             }
         });
+    }
+
+    public void setSongListItemPlayImage(){
+        SongListEntity temp=mainActivityViewModel.getUnderPlayingSongList();
+        int position=getIndexOfSongEntityFromList(allSongList,temp);
+        temp.setPlayImagePicture(adapter.getPauseImageBytes());
+        if(position!=-1){
+            allSongList.remove(position);
+            allSongList.add(position,temp);
+            adapter.setDataList(allSongList);
+            songListRecyclerViewModel.getCurrentData().setValue(allSongList);
+        }
+    }
+
+    public int getIndexOfSongEntityFromList(List<SongListEntity> entityList, SongListEntity entity){
+        String name=entity.getSongList();
+        for(int i=0;i<entityList.size();i++){
+            if (entityList.get(i).getSongList()
+                    .equals(name)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void startSongListPlay(int position){
+        mainActivityViewModel.setUnderPlayingSongList(allSongList.get(position));
+        mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
+                .createFragment(SongListEditFragmentViewPagerAdapter
+                        .SONG_OF_SONG_LIST_FRAGMENT);
+        mediaEasyController.startPlayListByRank(allSongList.get(position));
+    }
+
+    public void viewPagerChangeToSongFragment(int position){
+        mainActivityViewModel.setUnderPlayingSongList(allSongList.get(position));
+        mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
+                .createFragment(SongListEditFragmentViewPagerAdapter
+                        .SONG_OF_SONG_LIST_FRAGMENT);
+        mainActivityViewModel.getViewPager2().setCurrentItem(1,true);
     }
 
     @Override
@@ -183,6 +233,7 @@ public class AllSongListFragment extends Fragment {
                             adapter.setDataList(songListEntities);
                             allSongList=songListEntities;
                             songListRecyclerViewModel.getCurrentData().setValue(songListEntities);
+                            setSongListItemPlayImage();
                         }
                     }
                 }).subscribe();

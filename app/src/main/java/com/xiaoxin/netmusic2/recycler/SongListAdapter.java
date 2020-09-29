@@ -1,6 +1,8 @@
 package com.xiaoxin.netmusic2.recycler;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,15 +16,36 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongListEntity;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.List;
 
 public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongListViewHolder>
         implements View.OnClickListener {
     private Context context;
     private List<SongListEntity> dataList;
+    private byte[] playImageByte;
+    private byte[] pauseImageByte;
+    private int lastPlayPosition=-1;
 
     public void setContext(Context context) {
         this.context = context;
+        playImageByte =getPlayImageBytes();
+        pauseImageByte=getPauseImageBytes();
+    }
+
+    public byte[] getPlayImageBytes(){
+        Bitmap tempBitmap= BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
+        return outputStream.toByteArray();
+    }
+
+    public byte[] getPauseImageBytes(){
+        Bitmap tempBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
+        return outputStream.toByteArray();
     }
 
     public void setDataList(List<SongListEntity> dataList) {
@@ -72,7 +95,13 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
         holder.textViewForSongListCount.setText(songListCount);
         holder.textViewForSongListName.setText(dataList.get(position).getSongList());
         holder.imageViewAndPlayAll.setTag(position);
+        holder.imageViewAndPlayAll.setImageBitmap(getPlayImageBitmap(position));
         holder.cardView.setTag(position);
+    }
+
+    public Bitmap getPlayImageBitmap(int position){
+        byte[] temp=dataList.get(position).getPlayImagePicture();
+        return BitmapFactory.decodeByteArray(temp,0,temp.length-1);
     }
 
     /**
@@ -100,16 +129,38 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
                     clickListener.onClick(view,SongListRecyclerEnum.OPEN_SONG_LIST,position);
                     break;
                 case R.id.ImageButtonForPlayInSongListRecycler:
-                    clickListener.onClick(view,SongListRecyclerEnum.PLAY_ALL_OF_THE_SONG_LIST,position);
-                    break;
+                    if(Arrays.equals(dataList.get(position).getPlayImagePicture(), playImageByte))
+                    {
+                        dataList.get(position).setPlayImagePicture(pauseImageByte);
+                        clickListener.onClick(view, SongListRecyclerEnum.PLAY_ALL_OF_THE_SONG_LIST,position);
+                    }else {
+                        dataList.get(position).setPlayImagePicture(playImageByte);
+                        clickListener.onClick(view, SongListRecyclerEnum.PAUSE_ALL_OF_THE_SONG_LIST,position);
+                    }
+                    notifyItemChanged(position);
+
+                    //如果上个被播放的歌曲没有点暂停直接选了另一首来播放
+                    lastPlayedItemReset(position);
+
+//                    clickListener.onClick(view,SongListRecyclerEnum.PLAY_ALL_OF_THE_SONG_LIST,position);
+//                    break;
                 default:
                     break;
             }
         }
     }
 
+    public void lastPlayedItemReset(int position){
+        if (lastPlayPosition!=-1&&lastPlayPosition!=position){
+            dataList.get(lastPlayPosition).setPlayImagePicture(playImageByte);
+            notifyItemChanged(lastPlayPosition);
+        }
+        lastPlayPosition=position;
+    }
+
     public enum SongListRecyclerEnum{
         OPEN_SONG_LIST,
-        PLAY_ALL_OF_THE_SONG_LIST
+        PLAY_ALL_OF_THE_SONG_LIST,
+        PAUSE_ALL_OF_THE_SONG_LIST
     }
 }

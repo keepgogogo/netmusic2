@@ -16,6 +16,17 @@ public class SongListEntity {
     @ColumnInfo
     private int count;
 
+    @ColumnInfo
+    private byte[] playImagePicture;
+
+    public byte[] getPlayImagePicture() {
+        return playImagePicture;
+    }
+
+    public void setPlayImagePicture(byte[] playImagePicture) {
+        this.playImagePicture = playImagePicture;
+    }
+
     public int getCount() {
         return count;
     }

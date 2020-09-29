@@ -336,6 +336,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         SongListEntity entity=new SongListEntity();
         entity.setCount(songsOfNewSongList.size());
         entity.setSongList(name);
+        entity.setPlayImagePicture(playImageBytes);
         songListDataBaseDao.insert(entity);
 //        makeAllSongItemUnChosen();
     }
