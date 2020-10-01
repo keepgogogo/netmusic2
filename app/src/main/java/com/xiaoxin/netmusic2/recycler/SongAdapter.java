@@ -26,18 +26,12 @@ import java.util.List;
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder>
         implements View.OnClickListener{
 
-    private final String TAG="SONG ADAPTER";
-
     private Context context;
     private List<SongEntity> dataList;
     private byte[] playImageByte;
     private byte[] pauseImageByte;
     private SongRecyclerViewModel viewModel;
     private int lastPlayPosition=-1;
-
-    public SongRecyclerViewModel getViewModel() {
-        return viewModel;
-    }
 
     public void setViewModel(SongRecyclerViewModel viewModel) {
         this.viewModel = viewModel;
@@ -168,6 +162,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         int position=(int)view.getTag();
         if(clickListener!=null)
         {
+            String TAG = "SONG ADAPTER";
             switch (view.getId())
             {
                 case R.id.ImageButtonForPlayInRecyclerWidget:

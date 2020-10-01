@@ -30,6 +30,9 @@ public interface SongDataBaseDao {
     @Query("DELETE FROM SongOfList WHERE songList=:songList ")
     void deleteBySongList(String songList);
 
+    @Query("SELECT * FROM SongOfList WHERE id=:id")
+    SongEntity getById(int id);
+
 //    @Query("SELECT * FROM SongOfList WHERE name =:nameOfSong")
 //    List<Song> getByName(String nameOfSong);
 

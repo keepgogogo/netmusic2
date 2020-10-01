@@ -1,6 +1,5 @@
 package com.xiaoxin.netmusic2.database;
 
-import android.graphics.Bitmap;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;

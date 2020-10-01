@@ -1,8 +1,5 @@
 package com.xiaoxin.netmusic2.database;
 
-import androidx.room.ColumnInfo;
-import androidx.room.PrimaryKey;
-
 public class Song {
 
     private int id;

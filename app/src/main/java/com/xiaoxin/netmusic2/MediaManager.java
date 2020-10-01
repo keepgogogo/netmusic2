@@ -5,6 +5,7 @@ import android.media.MediaPlayer;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
+import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 
-public class MediaManager {
+public class MediaManager{
 
     public static final int PLAY_AS_RANK_OF_LIST = 0;
     public static final int PLAY_BY_RANDOM = 1;
@@ -31,9 +32,12 @@ public class MediaManager {
     private SongDataBaseDao songDataBaseDao;
     private SongEntity underPlayingSongEntity;
     private boolean isPaused;
+    private PlayingSongChangeListener playingSongChangeListener;
+    private int underPlayingSongDuration;
 
     public MediaManager() {
         super();
+        isPaused=true;
         mediaEasyController=new MediaEasyController();
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -43,6 +47,7 @@ public class MediaManager {
                     @Override
                     public void run() {
                         mediaPlayer.start();
+                        underPlayingSongDuration=mediaPlayer.getDuration();
                     }
                 }).start();
             }
@@ -51,11 +56,15 @@ public class MediaManager {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 try {
+                    SongEntity nextSong;
                     if(positionOfPlayingMusic==songEntities.size()-1){
                         positionOfPlayingMusic=0;
-                        playSong(songEntities.get(arrangementOfSong.get(positionOfPlayingMusic)));
+                        nextSong=songEntities.get(arrangementOfSong.get(positionOfPlayingMusic));
+                    } else {
+                        nextSong=songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic));
                     }
-                    playSong(songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic)));
+                    playingSongChangeListener.onChange(underPlayingSongEntity,nextSong);
+                    playSong(nextSong);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -183,9 +192,6 @@ public class MediaManager {
         return isPaused;
     }
 
-    public void setPaused(boolean paused) {
-        isPaused = paused;
-    }
 
     public int getPositionOfPlayingMusic() {
         return positionOfPlayingMusic;
@@ -219,6 +225,22 @@ public class MediaManager {
             positionOfPlayingMusic = 0;
         }
 
+        public void pauseOrStart(){
+            if(!isPaused()){
+                pauseMediaPlayer();
+            }else if (isPaused()){
+                mediaPlayer.start();
+            }
+        }
+
+        public int getUnderPlayingSongDuration(){
+            return underPlayingSongDuration;
+        }
+
+        public int getMediaPlayerCurrentDuration(){
+            return mediaPlayer.getCurrentPosition();
+        }
+
         public void pausePlay() {
             pauseMediaPlayer();
         }
@@ -231,12 +253,23 @@ public class MediaManager {
             }
         }
 
-        public void nextSong() throws IOException {
-            playSong(songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic)));
+        public void nextSong(){
+            try
+            {
+                playSong(songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic)));
+            }catch (IOException o){
+                o.printStackTrace();
+            }
+
         }
 
-        public void lastSong() throws IOException {
-            playSong(songEntities.get(arrangementOfSong.get(--positionOfPlayingMusic)));
+        public void lastSong(){
+            try{
+                playSong(songEntities.get(arrangementOfSong.get(--positionOfPlayingMusic)));
+            }catch (IOException o){
+                o.printStackTrace();
+            }
+
         }
 
         public void setDataBaseDao(SongDataBaseDao songDataBaseDao) {
@@ -251,8 +284,13 @@ public class MediaManager {
             closeMediaPlayer();
         }
 
-        public void playMidway(SongEntity songEntity) throws IOException {
-            playSong(songEntity);
+        public void playMidway(SongEntity songEntity){
+            try
+            {
+                playSong(songEntity);
+            }catch (IOException e){
+                e.printStackTrace();
+            }
         }
 
         public SongEntity getUnderPlayingSongEntity(){
@@ -268,4 +306,9 @@ public class MediaManager {
     public SongEntity getUnderPlayingSongEntity() {
         return underPlayingSongEntity;
     }
+
+    public void setPlayingSongChangeListener(PlayingSongChangeListener playingSongChangeListener){
+        this.playingSongChangeListener=playingSongChangeListener;
+    }
+
 }

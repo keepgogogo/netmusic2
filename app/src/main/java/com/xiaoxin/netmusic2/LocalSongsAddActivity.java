@@ -17,7 +17,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.MediaExtractor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;

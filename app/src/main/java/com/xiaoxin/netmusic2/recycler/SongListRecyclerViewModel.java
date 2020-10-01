@@ -1,7 +1,5 @@
 package com.xiaoxin.netmusic2.recycler;
 
-import android.text.style.AlignmentSpan;
-
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 

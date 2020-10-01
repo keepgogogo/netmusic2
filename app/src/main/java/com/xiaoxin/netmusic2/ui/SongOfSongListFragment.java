@@ -24,6 +24,7 @@ import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListDataBase;
 import com.xiaoxin.netmusic2.database.SongListDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongListEntity;
+import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
 import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
@@ -54,26 +55,40 @@ public class SongOfSongListFragment extends Fragment {
 
     private List<SongEntity> songEntities;
     private MediaManager.MediaEasyController mediaEasyController;
+    private PlayingSongChangeListener playingSongChangeListener;
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
     {
-        mainActivity=(MainActivity)getActivity();
-        assert mainActivity != null;
-        mainActivityViewModel=mainActivity.getMainActivityViewModel();
-        mediaEasyController=mainActivityViewModel.getMediaEasyController();
-
-        progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInSongOfSongListFragment);
-        progressBar.setVisibility(View.VISIBLE);
 
 
-
+        initMainActivityObject();
+        initMainActivityViewModel();
+        initMediaEasyController();
+        initProgressBar(view);
         //初始化recyclerView
         initRecyclerView(view);
         //获取歌曲列表
         loadSongEntities();
+        initPlayingSongChangeListener();
+    }
 
+    public void initProgressBar(@NonNull View view) {
+        progressBar=(ProgressBar)view.findViewById(R.id.ProgressBarInSongOfSongListFragment);
+        progressBar.setVisibility(View.VISIBLE);
+    }
 
+    public void initMediaEasyController() {
+        mediaEasyController=mainActivityViewModel.getMediaEasyController();
+    }
+
+    public void initMainActivityViewModel() {
+        assert mainActivity != null;
+        mainActivityViewModel = mainActivity.getMainActivityViewModel();
+    }
+
+    public void initMainActivityObject() {
+        mainActivity = (MainActivity) getActivity();
     }
 
     //初始化recyclerView
@@ -132,9 +147,8 @@ public class SongOfSongListFragment extends Fragment {
     {
         final String nameOfSongList=mainActivityViewModel.getUnderPlayingSongList().getSongList();
         if (nameOfSongList==null || nameOfSongList.length()==0)return;
-        songDataBase=SongDataBase.getDatabase(mainActivity);
-        songDataBaseDao=songDataBase.SongDataBaseDao();
-        mainActivityViewModel=mainActivity.getMainActivityViewModel();
+        initSongDataBase();
+        initMainActivityViewModel();
 
         Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
             @Override
@@ -195,11 +209,9 @@ public class SongOfSongListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        songDataBase=SongDataBase.getDatabase(mainActivity);
-        songDataBaseDao=songDataBase.SongDataBaseDao();
-        mainActivity=(MainActivity)getActivity();
-        assert mainActivity != null;
-        mainActivityViewModel=mainActivity.getMainActivityViewModel();
+        initSongDataBase();
+        initMainActivityObject();
+        initMainActivityViewModel();
         final String nameOfSongList=mainActivityViewModel.getUnderPlayingSongList().getSongList();
 
 
@@ -231,6 +243,31 @@ public class SongOfSongListFragment extends Fragment {
                     }
                 }).subscribe();
 
+    }
+
+    public void initSongDataBase() {
+        songDataBase = SongDataBase.getDatabase(mainActivity);
+        songDataBaseDao = songDataBase.SongDataBaseDao();
+    }
+
+    public void initPlayingSongChangeListener(){
+        playingSongChangeListener=new PlayingSongChangeListener() {
+            @Override
+            public void onChange(SongEntity oldSong, SongEntity newSong) {
+                List<SongEntity> tempEntities=adapter.getDataList();
+                int indexOfOldSong=getIndexOfSongEntityFromList(tempEntities,oldSong);
+                int indexOfNewSong=getIndexOfSongEntityFromList(tempEntities,newSong);
+                oldSong.setPlayImagePicture(adapter.getPlayImageBytes());
+                newSong.setPlayImagePicture(adapter.getPlayImageBytes());
+                tempEntities.remove(indexOfNewSong);
+                tempEntities.add(indexOfNewSong,newSong);
+                tempEntities.remove(indexOfOldSong);
+                tempEntities.add(indexOfOldSong,oldSong);
+                adapter.setDataList(tempEntities);
+                songRecyclerViewModel.getCurrentData().setValue(tempEntities);
+            }
+        };
+        mainActivityViewModel.setSongOfSongListFragmentSongChangeListener(playingSongChangeListener);
     }
 
 

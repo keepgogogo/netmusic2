@@ -12,15 +12,24 @@ import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.xiaoxin.netmusic2.database.Song;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
+import com.xiaoxin.netmusic2.database.SongEntity;
+import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
 import com.xiaoxin.netmusic2.ui.SongListEditFragment;
 import com.xiaoxin.netmusic2.ui.SongPlayingFragment;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
@@ -28,27 +37,55 @@ import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+import de.hdodenhof.circleimageview.CircleImageView;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     public static final int FRAGMENT_OF_SONG_LIST=0;
     public static final int FRAGMENT_OF_PLAYING=1;
+
+    private CircleImageView circleImageViewSeekBar;
+    private SeekBar seekBar;
+    private ImageView lastSongImageView;
+    private ImageView nextSongImageView;
+    private ImageView playImageView;
+    private TextView durationTextView;
 
     private BottomNavigationView navigationView;
     private FragmentManager fragmentManager;
     private List<Fragment> fragmentContainer;
     private MainActivityViewModel mainActivityViewModel;
+    private PlayingSongChangeListener playingSongChangeListener;
+    private MediaManager mediaManager;
+    private MediaManager.MediaEasyController mediaEasyController;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor preferenceEditor;
 
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
     private NotificationManager notificationManager;
     private RemoteViews remoteViews;
 
+    private boolean isSeekBarChange;
+    private boolean isLastSongExist;
+    private SongEntity lastSongOfLastTime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        songDataBase=SongDataBase.getDatabase(this);
-        songDataBaseDao=songDataBase.SongDataBaseDao();
+
+        initUI();
+        setUIClickListener();
+
+        initSharePreference();
+        initSongDataBase();
 
         getStorageAccess();
         initFragmentManager();
@@ -56,19 +93,166 @@ public class MainActivity extends AppCompatActivity {
         //设置BottomNavigationView
         initNavigation();
 
-        mainActivityViewModel=new MainActivityViewModel();
-        mainActivityViewModel.setMediaManager(new MediaManager());
-        mainActivityViewModel.getMediaManager().setSongDataBaseDao(songDataBaseDao);
+        initMediaManager();
+
+        setOnPlayingSongChangeListener();
+
+        initMainActivityViewModel();
 //        //设置播放服务
 //        setMediaService();
 
         notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-
-        //设置notification
+        startUpdateSeekBar();
+//        设置notification
 //        setNotification();
+    }
 
+    public void initUI(){
+        nextSongImageView=findViewById(R.id.NextSongInMainActivity);
+        lastSongImageView=findViewById(R.id.LastSongInMainActivity);
+        playImageView=findViewById(R.id.PauseInMainActivity);
+        seekBar=findViewById(R.id.SeekBar);
+        circleImageViewSeekBar=findViewById(R.id.CircleImageForAlbumInSeekBar);
+        durationTextView=findViewById(R.id.TextViewForDurationSeekBar);
+        getLastPlayedSong();
+    }
 
+    public void getLastPlayedSong(){
+        final int idOfLastPlaySong=sharedPreferences.getInt("LastPlaySong",-1);
+        if (idOfLastPlaySong!=-1){
+            Observable.create(new ObservableOnSubscribe<List<SongEntity>>() {
+                @Override
+                public void subscribe(ObservableEmitter<List<SongEntity>> emitter) throws Exception {
+                    SongEntity temp=songDataBaseDao.getById(idOfLastPlaySong);
+                    emitter.onNext(songDataBaseDao.getBySongList(temp.getSongList()));
+                }
+            }).observeOn(Schedulers.io())
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .doOnNext(new Consumer<List<SongEntity>>() {
+                        @Override
+                        public void accept(List<SongEntity> entities) throws Exception {
+                            SongEntity lastPlaySong=entities
+                                    .get(getIndexOfSongEntityById(entities,idOfLastPlaySong));
+                            byte[] pictureBytes=lastPlaySong.getAlbumPicture();
+                            circleImageViewSeekBar.setImageBitmap(BitmapFactory
+                                    .decodeByteArray(pictureBytes,0,pictureBytes.length-1));
+                            lastSongOfLastTime=lastPlaySong;
+                            isLastSongExist=true;
+                        }
+                    }).subscribe();
+        }
+    }
 
+    public int getIndexOfSongEntityById(List<SongEntity> entities,int id){
+        for(int i=0;i<entities.size();i++){
+            if(entities.get(i).getId()==id){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void setUIClickListener(){
+        lastSongImageView.setOnClickListener(MainActivity.this);
+        nextSongImageView.setOnClickListener(MainActivity.this);
+        playImageView.setOnClickListener(MainActivity.this);
+    }
+
+    public void initSharePreference(){
+        sharedPreferences=getSharedPreferences("MainActivity",MODE_PRIVATE);
+        preferenceEditor=sharedPreferences.edit();
+        preferenceEditor.apply();
+    }
+
+    public void startUpdateSeekBar(){
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                while(true){
+                    Thread.sleep(500);
+                    if(isSeekBarChange){
+                        emitter.onNext(-1);
+                    }else{
+                        emitter.onNext(mediaEasyController.getMediaPlayerCurrentDuration());
+                    }
+                }
+            }
+        }).subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) throws Exception {
+                        if (integer!=-1){
+                            seekBar.setProgress(integer);
+                            durationTextView.setText(timeParse(integer));
+                        }
+                    }
+                }).subscribe();
+    }
+
+    public String timeParse(int currentDuration){
+        String m="";
+        m=m+currentDuration/60;
+        m=m+":";
+        m=m+currentDuration%60;
+        return m;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.NextSongInMainActivity:
+                //todo
+                mediaEasyController.nextSong();
+                break;
+            case R.id.LastSongInMainActivity:
+                mediaEasyController.lastSong();
+                //todo
+                break;
+            case R.id.PauseInMainActivity:
+                if(isLastSongExist){
+                    mediaEasyController.playMidway(lastSongOfLastTime);
+                    isLastSongExist=false;
+                }else {
+                    mediaEasyController.pauseOrStart();
+                }
+
+                //todo
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void initSongDataBase() {
+        songDataBase= SongDataBase.getDatabase(this);
+        songDataBaseDao=songDataBase.SongDataBaseDao();
+    }
+
+    public void setOnPlayingSongChangeListener(){
+        playingSongChangeListener=new PlayingSongChangeListener() {
+            @Override
+            public void onChange(SongEntity oldSong, SongEntity newSong) {
+                mainActivityViewModel.notifyPlayingSongChange(oldSong, newSong);
+                byte[] pictureBytes=newSong.getAlbumPicture();
+                circleImageViewSeekBar.setImageBitmap(BitmapFactory
+                        .decodeByteArray(pictureBytes,0,pictureBytes.length-1));
+                preferenceEditor.putInt("LastPlaySong",newSong.getId());
+                preferenceEditor.apply();
+            }
+        };
+        mediaManager.setPlayingSongChangeListener(playingSongChangeListener);
+    }
+
+    public void initMediaManager(){
+        mediaManager=new MediaManager();
+        mediaManager.setSongDataBaseDao(songDataBaseDao);
+        mediaEasyController=mediaManager.getMediaEasyController();
+    }
+
+    private void initMainActivityViewModel() {
+        mainActivityViewModel=new MainActivityViewModel();
+        mainActivityViewModel.setMediaManager(mediaManager);
     }
 
     public void initFragmentManager(){

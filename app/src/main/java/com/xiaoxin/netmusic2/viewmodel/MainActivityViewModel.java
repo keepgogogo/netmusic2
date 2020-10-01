@@ -6,6 +6,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.xiaoxin.netmusic2.MediaManager;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
+import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
 
 public class MainActivityViewModel extends ViewModel {
@@ -16,6 +17,7 @@ public class MainActivityViewModel extends ViewModel {
     private ViewPager2 viewPager2;
     private MediaManager mediaManager;
     private MediaManager.MediaEasyController mediaEasyController;
+    private PlayingSongChangeListener songOfSongListFragmentSongChangeListener;
 
     public MediaManager getMediaManager() {
         return mediaManager;
@@ -68,5 +70,13 @@ public class MainActivityViewModel extends ViewModel {
 
     public void setUnderPlayingSongEntity(SongEntity underPlayingSongEntity) {
         this.underPlayingSongEntity = underPlayingSongEntity;
+    }
+
+    public void setSongOfSongListFragmentSongChangeListener(PlayingSongChangeListener songChangeListener){
+        songOfSongListFragmentSongChangeListener=songChangeListener;
+    }
+
+    public void notifyPlayingSongChange(SongEntity oldSong,SongEntity newSong){
+        songOfSongListFragmentSongChangeListener.onChange(oldSong, newSong);
     }
 }
