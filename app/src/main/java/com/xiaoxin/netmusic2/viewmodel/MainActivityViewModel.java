@@ -1,5 +1,8 @@
 package com.xiaoxin.netmusic2.viewmodel;
 
+import android.graphics.Bitmap;
+import android.widget.SeekBar;
+
 import androidx.lifecycle.ViewModel;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -8,6 +11,8 @@ import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
 import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivityViewModel extends ViewModel {
 
@@ -19,6 +24,8 @@ public class MainActivityViewModel extends ViewModel {
     private MediaManager.MediaEasyController mediaEasyController;
     private PlayingSongChangeListener songOfSongListFragmentSongChangeListener;
     private PlayingSongChangeListener songAlbumFragmentSongChangeListener;
+    private SeekBar seekBarInTheBottomOfScreen;
+    private CircleImageView imageViewForAlbumPictureIntheBottomOfScreen;
 
     public MediaManager getMediaManager() {
         return mediaManager;
@@ -90,5 +97,21 @@ public class MainActivityViewModel extends ViewModel {
         if(songAlbumFragmentSongChangeListener!=null){
             songAlbumFragmentSongChangeListener.onChange(oldSong, newSong);
         }
+    }
+
+    public SeekBar getSeekBarInTheBottomOfScreen() {
+        return seekBarInTheBottomOfScreen;
+    }
+
+    public void setSeekBarInTheBottomOfScreen(SeekBar seekBarInTheBottomOfScreen) {
+        this.seekBarInTheBottomOfScreen = seekBarInTheBottomOfScreen;
+    }
+
+    public CircleImageView getImageViewForAlbumPictureIntheBottomOfScreen() {
+        return imageViewForAlbumPictureIntheBottomOfScreen;
+    }
+
+    public void setImageViewForAlbumPictureIntheBottomOfScreen(CircleImageView imageViewForAlbumPictureIntheBottomOfScreen) {
+        this.imageViewForAlbumPictureIntheBottomOfScreen = imageViewForAlbumPictureIntheBottomOfScreen;
     }
 }

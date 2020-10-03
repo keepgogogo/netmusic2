@@ -59,8 +59,6 @@ public class AllSongListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
     {
-
-
         initUI(view);
 
         initDataEvents();
@@ -159,6 +157,7 @@ public class AllSongListFragment extends Fragment {
                         }
                         mainActivityViewModel.setUnderPlayingSongList(allSongList.get(position));
                         setSongListItemPlayImage();
+                        viewPagerChangeToSongFragment(position);
                         break;
                     case PAUSE_ALL_OF_THE_SONG_LIST:
                         mediaEasyController.pausePlay();
@@ -167,6 +166,7 @@ public class AllSongListFragment extends Fragment {
                         //todo
                         //viewpager自动切换
                         viewPagerChangeToSongFragment(position);
+                        startSongListPlay(position);
                         break;
                     default:
                         break;

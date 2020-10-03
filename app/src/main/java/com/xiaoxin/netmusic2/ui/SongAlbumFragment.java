@@ -41,7 +41,7 @@ public class SongAlbumFragment extends Fragment {
     private PlayingSongChangeListener songChangeListener;
 
     @Override
-    public void onViewCreated(@NonNull View view, @NonNull Bundle savedInstanceState)
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
     {
         initMainActivityAndViewModel();
         initSongChangeListener();
@@ -69,7 +69,7 @@ public class SongAlbumFragment extends Fragment {
             @Override
             public void onChange(SongEntity oldSong, SongEntity newSong) {
                 if(newSong!=null){
-                    populateUIComponents();
+                    populateUIComponents(newSong);
                     initAlbumAnimator();
                     startImageViewRotation();
                 }
@@ -102,6 +102,14 @@ public class SongAlbumFragment extends Fragment {
         }
     }
 
+    public void populateUIComponents(SongEntity entity){
+        if(entity!=null){
+            textViewForSongName.setText(entity.getName());
+            textViewForArtist.setText(entity.getArtist());
+            circleImageViewForAlbum.setImageBitmap(getBitmapFromBytes(entity.getAlbumPicture()));
+        }
+    }
+
 //    public void initAlbumRotationThread(){
 //        currentRotation=0;
 //        threadForAlbumRotation=new Thread(new Runnable() {
@@ -127,7 +135,7 @@ public class SongAlbumFragment extends Fragment {
 
     public void initAlbumAnimator(){
         albumAnimator=ObjectAnimator.ofFloat(circleImageViewForAlbum,"rotation",0f,360f);
-        albumAnimator.setDuration(3000);
+        albumAnimator.setDuration(15000);
         albumAnimator.setRepeatCount(Animation.INFINITE);
         albumAnimator.setRepeatMode(ObjectAnimator.RESTART);
         albumAnimator.setInterpolator(new LinearInterpolator());

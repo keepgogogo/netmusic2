@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -33,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -49,6 +51,8 @@ public class SongOfSongListFragment extends Fragment {
     private RecyclerView.LayoutManager layoutManager;
     private MainActivity mainActivity;
     private MainActivityViewModel mainActivityViewModel;
+    private SeekBar seekBarInTheBottomOfScreen;
+    private CircleImageView imageViewOfAlbumInTheBottomOfScreen;
 
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
@@ -71,6 +75,7 @@ public class SongOfSongListFragment extends Fragment {
         //获取歌曲列表
         loadSongEntities();
         initPlayingSongChangeListener();
+        initImageOfAlbumInTheBottomOfScreen();
     }
 
     public void initProgressBar(@NonNull View view) {
@@ -85,6 +90,7 @@ public class SongOfSongListFragment extends Fragment {
     public void initMainActivityViewModel() {
         assert mainActivity != null;
         mainActivityViewModel = mainActivity.getMainActivityViewModel();
+        seekBarInTheBottomOfScreen=mainActivityViewModel.getSeekBarInTheBottomOfScreen();
     }
 
     public void initMainActivityObject() {
@@ -124,9 +130,14 @@ public class SongOfSongListFragment extends Fragment {
                         break;
                     case IMAGE_BUTTON_PLAY:
                         //TODO
+                        mainActivity.resetSeekBar();
                         mediaEasyController.playMidway(entity);
+                        setAlbumPictureInTheBottomOfScreen(entity);
+
                         break;
                     case IMAGE_BUTTON_STOP:
+                        mediaEasyController.pauseOrStart();
+
                         //TODO
                         break;
                     default:
@@ -176,7 +187,14 @@ public class SongOfSongListFragment extends Fragment {
                 adapter.setDataList(songEntities);
                 songRecyclerViewModel.getCurrentData().setValue(songEntities);
             }
+            setAlbumPictureInTheBottomOfScreen(underPlaySong);
         }
+    }
+
+    public void setAlbumPictureInTheBottomOfScreen(SongEntity entity){
+        byte[] temp=entity.getAlbumPicture();
+        imageViewOfAlbumInTheBottomOfScreen.setImageBitmap(BitmapFactory
+                .decodeByteArray(temp,0,temp.length-1));
     }
 
     public int getIndexOfSongEntityFromList(List<SongEntity> entityList, SongEntity entity){
@@ -197,7 +215,9 @@ public class SongOfSongListFragment extends Fragment {
         return outputStream.toByteArray();
     }
 
-
+    public void initImageOfAlbumInTheBottomOfScreen(){
+        imageViewOfAlbumInTheBottomOfScreen=mainActivityViewModel.getImageViewForAlbumPictureIntheBottomOfScreen();
+    }
 
 
     @Override
