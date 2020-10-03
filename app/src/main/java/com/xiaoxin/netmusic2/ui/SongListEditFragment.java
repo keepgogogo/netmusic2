@@ -42,7 +42,7 @@ public class SongListEditFragment extends Fragment {
         mainActivity.getMainActivityViewModel().setSongListEditFragmentViewPagerAdapter(adapter);
         adapter.createFragment(SongListEditFragmentViewPagerAdapter.ALL_SONG_LIST_FRAGMENT);
         mainActivityViewModel=mainActivity.getMainActivityViewModel();
-        mainActivityViewModel.setViewPager2(viewPager2);
+        mainActivityViewModel.setSongListEditFragmentViewPager2(viewPager2);
     }
     public SongListEditFragment() {
         // Required empty public constructor

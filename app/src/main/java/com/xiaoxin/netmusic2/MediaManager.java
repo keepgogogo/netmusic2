@@ -276,9 +276,9 @@ public class MediaManager{
             setSongDataBaseDao(songDataBaseDao);
         }
 
-        public SongEntity getUnderPlayingSong() {
-            return songEntities.get(arrangementOfSong.get(positionOfPlayingMusic));
-        }
+//        public SongEntity getUnderPlayingSong() {
+//            return songEntities.get(arrangementOfSong.get(positionOfPlayingMusic));
+//        }
 
         public void endPlay() {
             closeMediaPlayer();
@@ -297,6 +297,10 @@ public class MediaManager{
             return MediaManager.this.getUnderPlayingSongEntity();
         }
 
+        public void mediaPlayJumpTo(int progress){
+            mediaPlayer.seekTo(progress);
+        }
+
     }
 
     public MediaEasyController getMediaEasyController() {
@@ -310,5 +314,7 @@ public class MediaManager{
     public void setPlayingSongChangeListener(PlayingSongChangeListener playingSongChangeListener){
         this.playingSongChangeListener=playingSongChangeListener;
     }
+
+
 
 }

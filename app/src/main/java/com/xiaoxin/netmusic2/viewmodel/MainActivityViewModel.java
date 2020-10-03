@@ -14,10 +14,11 @@ public class MainActivityViewModel extends ViewModel {
     private SongListEntity underPlayingSongList;
     private SongEntity underPlayingSongEntity;
     private SongListEditFragmentViewPagerAdapter songListEditFragmentViewPagerAdapter;
-    private ViewPager2 viewPager2;
+    private ViewPager2 songListEditFragmentViewPager2;
     private MediaManager mediaManager;
     private MediaManager.MediaEasyController mediaEasyController;
     private PlayingSongChangeListener songOfSongListFragmentSongChangeListener;
+    private PlayingSongChangeListener songAlbumFragmentSongChangeListener;
 
     public MediaManager getMediaManager() {
         return mediaManager;
@@ -33,12 +34,12 @@ public class MainActivityViewModel extends ViewModel {
         return mediaEasyController;
     }
 
-    public ViewPager2 getViewPager2() {
-        return viewPager2;
+    public ViewPager2 getSongListEditFragmentViewPager2() {
+        return songListEditFragmentViewPager2;
     }
 
-    public void setViewPager2(ViewPager2 viewPager2) {
-        this.viewPager2 = viewPager2;
+    public void setSongListEditFragmentViewPager2(ViewPager2 songListEditFragmentViewPager2) {
+        this.songListEditFragmentViewPager2 = songListEditFragmentViewPager2;
     }
 
 
@@ -76,7 +77,18 @@ public class MainActivityViewModel extends ViewModel {
         songOfSongListFragmentSongChangeListener=songChangeListener;
     }
 
+    public void setSongAlbumFragmentSongChangeListener(PlayingSongChangeListener songChangeListener){
+        songAlbumFragmentSongChangeListener=songChangeListener;
+    }
+
+
+
     public void notifyPlayingSongChange(SongEntity oldSong,SongEntity newSong){
-        songOfSongListFragmentSongChangeListener.onChange(oldSong, newSong);
+        if(songOfSongListFragmentSongChangeListener!=null){
+            songOfSongListFragmentSongChangeListener.onChange(oldSong, newSong);
+        }
+        if(songAlbumFragmentSongChangeListener!=null){
+            songAlbumFragmentSongChangeListener.onChange(oldSong, newSong);
+        }
     }
 }

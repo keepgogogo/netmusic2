@@ -211,7 +211,7 @@ public class AllSongListFragment extends Fragment {
         mainActivityViewModel.getSongListEditFragmentViewPagerAdapter()
                 .createFragment(SongListEditFragmentViewPagerAdapter
                         .SONG_OF_SONG_LIST_FRAGMENT);
-        mainActivityViewModel.getViewPager2().setCurrentItem(1,true);
+        mainActivityViewModel.getSongListEditFragmentViewPager2().setCurrentItem(1,true);
     }
 
     @Override

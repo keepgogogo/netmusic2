@@ -124,13 +124,7 @@ public class SongOfSongListFragment extends Fragment {
                         break;
                     case IMAGE_BUTTON_PLAY:
                         //TODO
-                        try {
-                            mediaEasyController.playMidway(entity);
-                        }catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
-
+                        mediaEasyController.playMidway(entity);
                         break;
                     case IMAGE_BUTTON_STOP:
                         //TODO

@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 29
     buildToolsVersion "30.0.0"
 
     defaultConfig {
         applicationId "com.xiaoxin.netmusic2"
-        minSdkVersion 23
-        targetSdkVersion 30
+        minSdkVersion 26
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
 
@@ -68,6 +68,9 @@ dependencies {
     //显示圆的图片
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'com.github.thinkcool:circletextimageview:1.0.20151218'
+
+    //歌词view
+    implementation 'me.wcy:lrcview:2.2'
 
 
 }

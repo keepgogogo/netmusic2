@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         startUpdateSeekBar();
+        initSeekBarChangeListener();
 //        设置notification
 //        setNotification();
     }
@@ -190,6 +191,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }).subscribe();
     }
 
+    public void initSeekBarChangeListener(){
+        SeekBar.OnSeekBarChangeListener onSeekBarChangeListener=new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mediaEasyController.pauseOrStart();
+                isSeekBarChange=true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mediaEasyController.mediaPlayJumpTo(seekBar.getProgress());
+                isSeekBarChange=false;
+                mediaEasyController.pauseOrStart();
+            }
+        };
+        seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
+    }
+
     public String timeParse(int currentDuration){
         String m="";
         m=m+currentDuration/60;
@@ -216,7 +240,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }else {
                     mediaEasyController.pauseOrStart();
                 }
-
                 //todo
                 break;
             default:
