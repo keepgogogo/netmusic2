@@ -3,11 +3,10 @@ package com.xiaoxin.netmusic2;
 
 import android.media.MediaPlayer;
 
-import com.xiaoxin.netmusic2.database.Song;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
-import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
+import com.xiaoxin.netmusic2.listener.MediaPlayerBinder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,8 +34,7 @@ public class MediaManager {
     private SongEntity underPlayingSongEntity;
     private boolean isPaused;
     private boolean havePlayerEverPlay;
-    private PlayingSongChangeListener playingSongChangeListener;
-    private MainActivity.MediaManagerToMainActivity mediaManagerToMainActivityInterface;
+    private MediaPlayerBinder mediaPlayerBinder;
     private float underPlayingSongDuration;
 
     public MediaManager() {
@@ -52,9 +50,11 @@ public class MediaManager {
                     @Override
                     public void run() {
                         mediaPlayer.start();
-                        mediaManagerToMainActivityInterface.setIsLastPlaySongExist();
+                        mediaPlayerBinder.setIsLastPlaySongExist();
                         havePlayerEverPlay=true;
                         underPlayingSongDuration = mediaPlayer.getDuration();
+
+                        mediaPlayerBinder.sendNotification(getUnderPlayingSongEntity());
                     }
                 }).start();
             }
@@ -71,7 +71,7 @@ public class MediaManager {
                         } else {
                             nextSong = songEntities.get(arrangementOfSong.get(++positionOfPlayingMusic));
                         }
-                        playingSongChangeListener.onChange(underPlayingSongEntity, nextSong);
+                        mediaPlayerBinder.onChange(underPlayingSongEntity, nextSong);
                         playSong(nextSong);
                     }
                 } catch (IOException e) {
@@ -90,7 +90,7 @@ public class MediaManager {
             try {
                 SongEntity temp=underPlayingSongEntity;
                 underPlayingSongEntity = songEntity;
-                playingSongChangeListener.onChange(temp,songEntity);
+                mediaPlayerBinder.onChange(temp,songEntity);
                 mediaPlayer.reset();
                 mediaPlayer.setDataSource(songEntity.getPath());
 
@@ -111,7 +111,7 @@ public class MediaManager {
                 try {
                     SongEntity temp=underPlayingSongEntity;
                     underPlayingSongEntity = songEntity;
-                    playingSongChangeListener.onChange(temp,songEntity);
+                    mediaPlayerBinder.onChange(temp,songEntity);
                     mediaPlayer.reset();
                     mediaPlayer.setDataSource(songEntity.getPath());
                     mediaPlayer.prepare();//todo
@@ -124,7 +124,7 @@ public class MediaManager {
 
         else {
             try {
-//                playingSongChangeListener.onChange(underPlayingSongEntity,songEntity);
+//                mediaPlayerListener.onChange(underPlayingSongEntity,songEntity);
                 underPlayingSongEntity=songEntity;
                 mediaPlayer.reset();
                 mediaPlayer.setDataSource(songEntity.getPath());
@@ -255,6 +255,7 @@ public class MediaManager {
                 mediaPlayer.start();
                 isPaused=false;
             }
+            mediaPlayerBinder.playStatusChanged(isPaused);
         }
 
         public float getUnderPlayingSongDuration() {
@@ -362,12 +363,8 @@ public class MediaManager {
         return underPlayingSongEntity;
     }
 
-    public void setPlayingSongChangeListener(PlayingSongChangeListener playingSongChangeListener) {
-        this.playingSongChangeListener = playingSongChangeListener;
+    public void setMediaPlayerBinder(MediaPlayerBinder mediaPlayerBinder) {
+        this.mediaPlayerBinder = mediaPlayerBinder;
     }
 
-    public void setMediaManagerToMainActivityInterface(MainActivity.MediaManagerToMainActivity
-                                                               mediaManagerToMainActivityInterface) {
-        this.mediaManagerToMainActivityInterface = mediaManagerToMainActivityInterface;
-    }
 }

@@ -18,7 +18,7 @@ import com.xiaoxin.netmusic2.MainActivity;
 import com.xiaoxin.netmusic2.MediaManager;
 import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongEntity;
-import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
+import com.xiaoxin.netmusic2.listener.MediaPlayerListener;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -38,7 +38,7 @@ public class SongAlbumFragment extends Fragment {
 
     private MediaManager mediaManager;
     private MediaManager.MediaEasyController mediaEasyController;
-    private PlayingSongChangeListener songChangeListener;
+    private MediaPlayerListener mediaPlayerListener;
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
@@ -65,7 +65,7 @@ public class SongAlbumFragment extends Fragment {
     }
 
     public void initSongChangeListener(){
-        songChangeListener=new PlayingSongChangeListener() {
+        mediaPlayerListener =new MediaPlayerListener() {
             @Override
             public void onChange(SongEntity oldSong, SongEntity newSong) {
                 if(newSong!=null){
@@ -75,7 +75,7 @@ public class SongAlbumFragment extends Fragment {
                 }
             }
         };
-        mainActivityViewModel.setSongAlbumFragmentSongChangeListener(songChangeListener);
+        mainActivityViewModel.setSongAlbumFragmentSongChangeListener(mediaPlayerListener);
     }
 
     public Bitmap getBitmapFromBytes(byte[] bytes){

@@ -72,5 +72,4 @@ dependencies {
     //歌词view
     implementation 'me.wcy:lrcview:2.2'
 
-
 }

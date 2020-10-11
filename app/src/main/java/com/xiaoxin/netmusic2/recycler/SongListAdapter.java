@@ -17,35 +17,28 @@ import com.xiaoxin.netmusic2.R;
 import com.xiaoxin.netmusic2.database.SongListEntity;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
 import java.util.List;
 
 public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongListViewHolder>
         implements View.OnClickListener {
     private Context context;
     private List<SongListEntity> dataList;
-    private byte[] playImageByte;
-    private byte[] pauseImageByte;
+    private Bitmap playImageBitmap;
+    private Bitmap pauseImageBitmap;
     private int lastPlayPosition=-1;
 
     public void setContext(Context context) {
         this.context = context;
-        playImageByte =getPlayImageBytes();
-        pauseImageByte=getPauseImageBytes();
+        playImageBitmap =getPlayImageBytes();
+        pauseImageBitmap=getPauseImageBytes();
     }
 
-    public byte[] getPlayImageBytes(){
-        Bitmap tempBitmap= BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
-        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-        return outputStream.toByteArray();
+    public Bitmap getPlayImageBytes(){
+        return BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
     }
 
-    public byte[] getPauseImageBytes(){
-        Bitmap tempBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
-        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-        return outputStream.toByteArray();
+    public Bitmap getPauseImageBytes(){
+        return BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
     }
 
     public void setDataList(List<SongListEntity> dataList) {
@@ -95,14 +88,16 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
         holder.textViewForSongListCount.setText(songListCount);
         holder.textViewForSongListName.setText(dataList.get(position).getSongList());
         holder.imageViewAndPlayAll.setTag(position);
-        holder.imageViewAndPlayAll.setImageBitmap(getPlayImageBitmap(position));
+        if (dataList.get(position).isPlaying())
+        {
+            holder.imageViewAndPlayAll.setImageBitmap(pauseImageBitmap);
+        }
+        else {
+            holder.imageViewAndPlayAll.setImageBitmap(playImageBitmap);
+        }
         holder.cardView.setTag(position);
     }
 
-    public Bitmap getPlayImageBitmap(int position){
-        byte[] temp=dataList.get(position).getPlayImagePicture();
-        return BitmapFactory.decodeByteArray(temp,0,temp.length-1);
-    }
 
     /**
      * 点击事件监听
@@ -129,12 +124,12 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
                     clickListener.onClick(view,SongListRecyclerEnum.OPEN_SONG_LIST,position);
                     break;
                 case R.id.ImageButtonForPlayInSongListRecycler:
-                    if(Arrays.equals(dataList.get(position).getPlayImagePicture(), playImageByte))
+                    if(!dataList.get(position).isPlaying())
                     {
-                        dataList.get(position).setPlayImagePicture(pauseImageByte);
+                        dataList.get(position).setPlaying(true);
                         clickListener.onClick(view, SongListRecyclerEnum.PLAY_ALL_OF_THE_SONG_LIST,position);
                     }else {
-                        dataList.get(position).setPlayImagePicture(playImageByte);
+                        dataList.get(position).setPlaying(false);
                         clickListener.onClick(view, SongListRecyclerEnum.PAUSE_ALL_OF_THE_SONG_LIST,position);
                     }
                     notifyItemChanged(position);
@@ -152,7 +147,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.SongLi
 
     public void lastPlayedItemReset(int position){
         if (lastPlayPosition!=-1&&lastPlayPosition!=position){
-            dataList.get(lastPlayPosition).setPlayImagePicture(playImageByte);
+            dataList.get(lastPlayPosition).setPlaying(false);
             notifyItemChanged(lastPlayPosition);
         }
         lastPlayPosition=position;

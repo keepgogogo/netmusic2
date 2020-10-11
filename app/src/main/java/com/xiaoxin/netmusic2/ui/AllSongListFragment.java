@@ -178,7 +178,7 @@ public class AllSongListFragment extends Fragment {
     public void setSongListItemPlayImage(){
         SongListEntity temp=mainActivityViewModel.getUnderPlayingSongList();
         int position=getIndexOfSongEntityFromList(allSongList,temp);
-        temp.setPlayImagePicture(adapter.getPauseImageBytes());
+        temp.setPlaying(true);
         if(position!=-1){
             allSongList.remove(position);
             allSongList.add(position,temp);

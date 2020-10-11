@@ -88,7 +88,6 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     private Bitmap defaultAlbumBitmap;
     private ByteArrayOutputStream defaultAlbumOutPutStream;
     private byte[] defaultAlbumBytes;
-    private byte[] playImageBytes;
 
     private MediaPlayerOperator mediaPlayerOperator;
     private SongEntity underPlayingSong;
@@ -171,7 +170,6 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
             public void subscribe(@NonNull ObservableEmitter<List<SongEntity>> emitter)
             {
                 defaultAlbumBytes=getDefaultAlbumBytes();
-                playImageBytes=getPlayImageBytes();
                 fileLoader.startQuery();
                 List<SongEntity> songEntities=loadSongIntoList(fileLoader.getCursor());
                 emitter.onNext(getNewAddSongs(songEntities));
@@ -253,14 +251,6 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         return  defaultAlbumOutPutStream.toByteArray();
     }
 
-    public byte[] getPlayImageBytes(){
-        Bitmap tempBitmap=BitmapFactory.decodeResource(LocalSongsAddActivity.this.getResources(),
-                R.mipmap.ic_play_bar_btn_play);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
-        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-        return outputStream.toByteArray();
-    }
-
     public void makeEditTextEditable(){
         editTextListenStart();
         editText.setKeyListener(editTextKeyListener);
@@ -291,7 +281,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         SongEntity entity=new SongEntity();
         entity.setSong(getBasicInformationOfSong(tempSong,cursor));
         entity.setAlbumPicture(getAlbumBytes(entity.getAlbumID()));
-        entity.setPlayImagePicture(playImageBytes);
+        entity.setPlaying(false);
         return entity;
     }
 
@@ -335,7 +325,7 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
         SongListEntity entity=new SongListEntity();
         entity.setCount(songsOfNewSongList.size());
         entity.setSongList(name);
-        entity.setPlayImagePicture(playImageBytes);
+        entity.setPlaying(false);
         songListDataBaseDao.insert(entity);
 //        makeAllSongItemUnChosen();
     }
@@ -364,7 +354,6 @@ public class LocalSongsAddActivity extends AppCompatActivity implements View.OnC
     }
 
     public void CopySongEntity(SongEntity target,SongEntity source){
-        target.setPlayImagePicture(source.getPlayImagePicture());
         target.setAlbumPicture(source.getAlbumPicture());
         target.setAlbum(source.getAlbum());
         target.setCheckBoxChecked(source.isCheckBoxChecked());

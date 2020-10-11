@@ -9,26 +9,25 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.xiaoxin.netmusic2.broadcastreceiver.MediaNotificationReceiver;
 import com.xiaoxin.netmusic2.database.SongDataBase;
 import com.xiaoxin.netmusic2.database.SongDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongEntity;
-import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
+import com.xiaoxin.netmusic2.listener.MediaPlayerBinder;
 import com.xiaoxin.netmusic2.ui.SongListEditFragment;
 import com.xiaoxin.netmusic2.ui.SongPlayingFragment;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
@@ -61,8 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FragmentManager fragmentManager;
     private List<Fragment> fragmentContainer;
     private MainActivityViewModel mainActivityViewModel;
-    private PlayingSongChangeListener playingSongChangeListener;
-    private MediaManagerToMainActivity mediaManagerToMainActivityInterface;
+    private MediaPlayerBinder mediaPlayerBinder;
     private MediaManager mediaManager;
     private MediaManager.MediaEasyController mediaEasyController;
     private SharedPreferences sharedPreferences;
@@ -70,15 +68,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private SongDataBase songDataBase;
     private SongDataBaseDao songDataBaseDao;
-    private NotificationManager notificationManager;
-    private RemoteViews remoteViews;
 
     private boolean isSeekBarChange;
     private boolean isLastSongExist;
     private SongEntity lastSongOfLastTime;
 
     private Disposable disposableOfSeekBar;
-    private Thread threadOfSeekBarUpdate;
+
+    private NotificationMaker notificationMaker;
+    private MediaNotificationReceiver mediaNotificationReceiver;
+
+    private Bitmap playImageBitmap;
+    private Bitmap pauseImageBitmap;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,33 +88,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         initUI();
+        initPauseAndPlayImageBitmap();
         setUIClickListener();
-        initMediaManagerToMainActivityInterface();
-
         initSharePreference();
         initSongDataBase();
 
         getStorageAccess();
-        initFragmentManager();
 
-        //设置BottomNavigationView
-        initNavigation();
 
-        getLastPlayedSong();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initFragmentManager();
+                getLastPlayedSong();
+                startUpdateSeekBar();
+                initNavigation();
+                initMediaManager();
+                setOnPlayingSongChangeListener();
+                initMainActivityViewModel();
+                initSeekBarChangeListener();
+                initNotification();
+                initMediaNotificationReceiver();
+            }
+        }).start();
 
-        initMediaManager();
+    }
 
-        setOnPlayingSongChangeListener();
+    public void initMediaNotificationReceiver()
+    {
+        mediaNotificationReceiver=new MediaNotificationReceiver();
+        mediaNotificationReceiver.setMediaEasyController(mediaEasyController);
+        mediaNotificationReceiver.setNotificationMaker(notificationMaker);
+    }
 
-        initMainActivityViewModel();
-//        //设置播放服务
-//        setMediaService();
-
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        startUpdateSeekBar();
-        initSeekBarChangeListener();
-//        设置notification
-//        setNotification();
+    public void initNotification() {
+        notificationMaker = new NotificationMaker();
+        notificationMaker.setPlayAndPauseImageBitmap(playImageBitmap,pauseImageBitmap);
+        notificationMaker.setContext(this);
+        notificationMaker.setMainActivityViewModel(mainActivityViewModel);
+        notificationMaker.prepare();
     }
 
     public void initUI() {
@@ -122,15 +136,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         seekBar = findViewById(R.id.SeekBar);
         circleImageViewSeekBar = findViewById(R.id.CircleImageForAlbumInSeekBar);
         durationTextView = findViewById(R.id.TextViewForDurationSeekBar);
-    }
-
-    public void initMediaManagerToMainActivityInterface(){
-        mediaManagerToMainActivityInterface=new MediaManagerToMainActivity() {
-            @Override
-            public void setIsLastPlaySongExist() {
-                isLastSongExist=false;
-            }
-        };
     }
 
     public void getLastPlayedSong() {
@@ -168,6 +173,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return -1;
     }
 
+    public void initPauseAndPlayImageBitmap() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                pauseImageBitmap = BitmapFactory.decodeResource(MainActivity.this.getResources()
+                        , R.mipmap.ic_play_bar_btn_pause);
+                playImageBitmap = BitmapFactory.decodeResource(MainActivity.this.getResources()
+                        , R.mipmap.ic_play_bar_btn_play);
+            }
+        }).start();
+    }
+
     public void setUIClickListener() {
         lastSongImageView.setOnClickListener(MainActivity.this);
         nextSongImageView.setOnClickListener(MainActivity.this);
@@ -181,15 +198,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void startUpdateSeekBar() {
-        disposableOfSeekBar=Observable.create(new ObservableOnSubscribe<Integer>() {
+        disposableOfSeekBar = Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
             public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
                 while (true) {
                     Thread.sleep(500);
-                    if (isSeekBarChange||!mediaEasyController.havePlayerEverPlayed()) {
+                    if (isSeekBarChange || !mediaEasyController.havePlayerEverPlayed()) {
                         emitter.onNext(-1);
                     } else {
-                            emitter.onNext(mediaEasyController.getMediaPlayerCurrentDuration());
+                        emitter.onNext(mediaEasyController.getMediaPlayerCurrentDuration());
                     }
                 }
             }
@@ -199,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void accept(Integer integer) throws Exception {
                         if (integer != -1) {
-                            int progress= (int) (((integer)/mediaEasyController.getUnderPlayingSongDuration())*100);
+                            int progress = (int) (((integer) / mediaEasyController.getUnderPlayingSongDuration()) * 100);
                             seekBar.setProgress(progress);
                             durationTextView.setText(timeParse(integer));
                         }
@@ -207,10 +224,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }).subscribe();
     }
 
-    public void resetSeekBar(){
-        isSeekBarChange=true;
+    public void resetSeekBar() {
+        isSeekBarChange = true;
         seekBar.setProgress(0);
-        isSeekBarChange=false;
+        isSeekBarChange = false;
     }
 
     public void initSeekBarChangeListener() {
@@ -237,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public String timeParse(int currentDuration) {
-        currentDuration=currentDuration/1000;
+        currentDuration = currentDuration / 1000;
         String m = "";
         m = m + currentDuration / 60;
         m = m + ":";
@@ -251,11 +268,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.NextSongInMainActivity:
                 //todo
                 mediaEasyController.nextSong();
-                resetSeekBar();
+//                resetSeekBar();
                 break;
             case R.id.LastSongInMainActivity:
                 mediaEasyController.lastSong();
-                resetSeekBar();
+//                resetSeekBar();
                 //todo
                 break;
             case R.id.PauseInMainActivity:
@@ -266,20 +283,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mediaEasyController.pauseOrStart();
                 }
 
-                if (mediaEasyController.isMediaPlayerPause()){
-                    //todo
-                    //暂停了怎么做
-                    playImageView.setImageBitmap(BitmapFactory
-                            .decodeResource(this.getResources(),R.mipmap.ic_play_bar_btn_play));
-                    isSeekBarChange=true;
-                }else {
-                    //todo
-                    //还没开始怎么做
-                    playImageView.setImageBitmap(BitmapFactory
-                            .decodeResource(this.getResources(),R.mipmap.ic_play_bar_btn_pause));
-                    isSeekBarChange=false;
-                }
-
+//                if (mediaEasyController.isMediaPlayerPause()) {
+//                    //todo
+//                    //暂停了怎么做
+//                    playImageView.setImageBitmap(playImageBitmap);
+//                    isSeekBarChange = true;
+//                } else {
+//                    //todo
+//                    //还没开始怎么做
+//                    playImageView.setImageBitmap(pauseImageBitmap);
+//                    isSeekBarChange = false;
+//                }
+                mediaNotificationReceiver.onReceive(this,new Intent("com.xiaoxin.broadcast.pause"));
                 break;
             default:
                 break;
@@ -292,7 +307,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void setOnPlayingSongChangeListener() {
-        playingSongChangeListener = new PlayingSongChangeListener() {
+        mediaPlayerBinder = new MediaPlayerBinder() {
+
             @Override
             public void onChange(SongEntity oldSong, SongEntity newSong) {
                 mainActivityViewModel.notifyPlayingSongChange(oldSong, newSong);
@@ -301,15 +317,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .decodeByteArray(pictureBytes, 0, pictureBytes.length - 1));
                 preferenceEditor.putInt("LastPlaySong", newSong.getId());
                 preferenceEditor.apply();
+                resetSeekBar();
+            }
+
+            @Override
+            public void setIsLastPlaySongExist() {
+                isLastSongExist = false;
+            }
+
+            @Override
+            public void sendNotification(SongEntity entity) {
+                makeNotification(entity);
+            }
+
+            @Override
+            public void playStatusChanged(boolean isPlaying) {
+                if (isPlaying)
+                {
+                    playImageView.setImageBitmap(pauseImageBitmap);
+                    isSeekBarChange = false;
+                }else {
+                    playImageView.setImageBitmap(playImageBitmap);
+                    isSeekBarChange = true;
+                }
             }
         };
-        mediaManager.setPlayingSongChangeListener(playingSongChangeListener);
+        mediaManager.setMediaPlayerBinder(mediaPlayerBinder);
+    }
+
+    public void makeNotification(SongEntity entity) {
+        notificationMaker.setRemoteViewAlbumPicture(entity.getAlbumPicture());
+        notificationMaker.setRemoteViewText(entity.getName(), entity.getArtist());
+        notificationMaker.sendNotification();
     }
 
     public void initMediaManager() {
         mediaManager = new MediaManager();
         mediaManager.setSongDataBaseDao(songDataBaseDao);
-        mediaManager.setMediaManagerToMainActivityInterface(mediaManagerToMainActivityInterface);
         mediaEasyController = mediaManager.getMediaEasyController();
     }
 
@@ -328,62 +372,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setFragment(fragmentContainer.get(FRAGMENT_OF_SONG_LIST));
     }
 
-    /**
-     * 设置notification
-     */
-//    public void setNotification(){
-//        notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-//        NotificationCompat.Builder builder= new NotificationCompat.Builder(this,"NetMusic");
-//
-//        Intent intent = new Intent(this, MainActivity.class);
-//        // 点击跳转到主界面
-//        PendingIntent intent_go = PendingIntent.getActivity(this, 5, intent,
-//                PendingIntent.FLAG_UPDATE_CURRENT);
-//        remoteViews.setOnClickPendingIntent(R.id.notification, intent_go);
-//
-//        // 4个参数context, requestCode, intent, flags
-//        PendingIntent intent_close = PendingIntent.getActivity(this, 0, intent,
-//                PendingIntent.FLAG_UPDATE_CURRENT);
-//        remoteViews.setOnClickPendingIntent(R.id.CloseTheNotification, intent_close);
-//
-//        // 设置上一曲
-//        Intent prv = new Intent();
-//        prv.setAction(SyncStateContract.Constants.ACTION_PRV);
-//        PendingIntent intent_prev = PendingIntent.getBroadcast(this, 1, prv,
-//                PendingIntent.FLAG_UPDATE_CURRENT);
-//        remoteViews.setOnClickPendingIntent(R.id.LastSongInNotification, intent_prev);
-//    }
-
-    /**
-     * 设置播放服务
-     */
-//    public void setMediaService(){
-//        Intent startMediaService=new Intent(MainActivity.this, MediaManager.class);
-//        startService(startMediaService);
-//
-//
-//        Intent bindIntent=new Intent(MainActivity.this,MediaManager.class);
-//        bindService(bindIntent,connection,BIND_AUTO_CREATE);
-//
-//    }
-//
-//    private ServiceConnection connection=new ServiceConnection() {
-//        @Override
-//        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-//            myBinder=(MediaManager.MyBinder)iBinder;
-//
-//            myBinder.setDataBaseDao(songDataBaseDao);
-//            mainActivityViewModel.setMyBinder(myBinder);
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName componentName) {
-//        }
-//    };
-
 
     //对导航栏进行初始化，设置点击事件
     public void initNavigation() {
+
         navigationView = (BottomNavigationView) findViewById(R.id.bottomNavigationBar);
         navigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -402,8 +394,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
             }
         });
-
-//        if(navigationView.)
     }
 
 
@@ -420,14 +410,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getMenuInflater().inflate(R.menu.menu_of_main_activity, menu);
         return true;
     }
-//
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        // Bind to LocalService
-//        Intent intent = new Intent(MainActivity.this, MediaManager.class);
-//        bindService(intent, connection, Context.BIND_AUTO_CREATE);
-//    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -468,9 +450,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         disposableOfSeekBar.dispose();
         mediaEasyController.endPlay();
-    }
-
-    public interface MediaManagerToMainActivity{
-        void setIsLastPlaySongExist();
     }
 }

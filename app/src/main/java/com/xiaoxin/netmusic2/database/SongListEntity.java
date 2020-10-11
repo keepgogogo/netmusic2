@@ -2,6 +2,7 @@ package com.xiaoxin.netmusic2.database;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "SongList")
@@ -16,15 +17,15 @@ public class SongListEntity {
     @ColumnInfo
     private int count;
 
-    @ColumnInfo
-    private byte[] playImagePicture;
+    @Ignore
+    private boolean isPlaying;
 
-    public byte[] getPlayImagePicture() {
-        return playImagePicture;
+    public boolean isPlaying() {
+        return isPlaying;
     }
 
-    public void setPlayImagePicture(byte[] playImagePicture) {
-        this.playImagePicture = playImagePicture;
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
     }
 
     public int getCount() {

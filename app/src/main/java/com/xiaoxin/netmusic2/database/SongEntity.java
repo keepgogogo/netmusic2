@@ -47,13 +47,11 @@ public class SongEntity {
     @ColumnInfo
     private byte[] albumPicture;
 
-    @ColumnInfo
-    private byte[] playImagePicture;
 
     @Ignore
     private boolean isCheckBoxChecked;
 
-    @Ignore
+    @ColumnInfo
     private boolean isPlaying;
 
     public long getAlbumID() {
@@ -62,14 +60,6 @@ public class SongEntity {
 
     public void setAlbumID(long albumID) {
         this.albumID = albumID;
-    }
-
-    public byte[] getPlayImagePicture() {
-        return playImagePicture;
-    }
-
-    public void setPlayImagePicture(byte[] playImagePicture) {
-        this.playImagePicture = playImagePicture;
     }
 
     public boolean isPlaying() {

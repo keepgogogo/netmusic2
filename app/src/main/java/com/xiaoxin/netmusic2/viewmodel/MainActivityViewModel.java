@@ -1,6 +1,5 @@
 package com.xiaoxin.netmusic2.viewmodel;
 
-import android.graphics.Bitmap;
 import android.widget.SeekBar;
 
 import androidx.lifecycle.ViewModel;
@@ -9,7 +8,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.xiaoxin.netmusic2.MediaManager;
 import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListEntity;
-import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
+import com.xiaoxin.netmusic2.listener.MediaPlayerListener;
 import com.xiaoxin.netmusic2.viewpager2.SongListEditFragmentViewPagerAdapter;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -22,8 +21,9 @@ public class MainActivityViewModel extends ViewModel {
     private ViewPager2 songListEditFragmentViewPager2;
     private MediaManager mediaManager;
     private MediaManager.MediaEasyController mediaEasyController;
-    private PlayingSongChangeListener songOfSongListFragmentSongChangeListener;
-    private PlayingSongChangeListener songAlbumFragmentSongChangeListener;
+    private MediaPlayerListener songOfSongListFragmentSongChangeListener;
+    private MediaPlayerListener songAlbumFragmentSongChangeListener;
+    private MediaPlayerListener notificationMakerSongChangeListener;
     private SeekBar seekBarInTheBottomOfScreen;
     private CircleImageView imageViewForAlbumPictureIntheBottomOfScreen;
 
@@ -80,22 +80,29 @@ public class MainActivityViewModel extends ViewModel {
         this.underPlayingSongEntity = underPlayingSongEntity;
     }
 
-    public void setSongOfSongListFragmentSongChangeListener(PlayingSongChangeListener songChangeListener){
+    public void setSongOfSongListFragmentSongChangeListener(MediaPlayerListener songChangeListener){
         songOfSongListFragmentSongChangeListener=songChangeListener;
     }
 
-    public void setSongAlbumFragmentSongChangeListener(PlayingSongChangeListener songChangeListener){
+    public void setSongAlbumFragmentSongChangeListener(MediaPlayerListener songChangeListener){
         songAlbumFragmentSongChangeListener=songChangeListener;
     }
 
+    public void setNotificationMakerSongChangeListener(MediaPlayerListener notificationMakerSongChangeListener) {
+        this.notificationMakerSongChangeListener = notificationMakerSongChangeListener;
+    }
 
-
-    public void notifyPlayingSongChange(SongEntity oldSong,SongEntity newSong){
+    public void notifyPlayingSongChange(SongEntity oldSong, SongEntity newSong){
         if(songOfSongListFragmentSongChangeListener!=null){
             songOfSongListFragmentSongChangeListener.onChange(oldSong, newSong);
         }
+
         if(songAlbumFragmentSongChangeListener!=null){
             songAlbumFragmentSongChangeListener.onChange(oldSong, newSong);
+        }
+
+        if(notificationMakerSongChangeListener!=null){
+            notificationMakerSongChangeListener.onChange(oldSong, newSong);
         }
     }
 
@@ -107,7 +114,7 @@ public class MainActivityViewModel extends ViewModel {
         this.seekBarInTheBottomOfScreen = seekBarInTheBottomOfScreen;
     }
 
-    public CircleImageView getImageViewForAlbumPictureIntheBottomOfScreen() {
+    public CircleImageView getImageViewForAlbumPictureInTheBottomOfScreen() {
         return imageViewForAlbumPictureIntheBottomOfScreen;
     }
 

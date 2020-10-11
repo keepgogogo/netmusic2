@@ -28,8 +28,8 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     private Context context;
     private List<SongEntity> dataList;
-    private byte[] playImageByte;
-    private byte[] pauseImageByte;
+    private Bitmap playImageBitmap;
+    private Bitmap pauseImageBitmap;
     private SongRecyclerViewModel viewModel;
     private int lastPlayPosition=-1;
 
@@ -44,22 +44,16 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public void setContext(Context context){
         this.context=context;
-        playImageByte =getPlayImageBytes();
-        pauseImageByte=getPauseImageBytes();
+        playImageBitmap=getPlayImageBytes();
+        pauseImageBitmap=getPauseImageBytes();
     }
 
-    public byte[] getPlayImageBytes(){
-        Bitmap tempBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
-        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-        return outputStream.toByteArray();
+    public Bitmap getPlayImageBytes(){
+        return BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_play);
     }
 
-    public byte[] getPauseImageBytes(){
-        Bitmap tempBitmap=BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
-        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-        return outputStream.toByteArray();
+    public Bitmap getPauseImageBytes(){
+        return BitmapFactory.decodeResource(context.getResources(),R.mipmap.ic_play_bar_btn_pause);
     }
 
 
@@ -115,22 +109,19 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         String singerOfSong=dataList.get(position).getArtist();
         holder.textViewForNameOfSong.setText(nameOfSong==null?"":nameOfSong);
         holder.textViewForNameOfSinger.setText(singerOfSong==null?"":singerOfSong);
-        holder.imageView.setImageBitmap(getPlayImageBitmap(position));
+//        holder.imageView.setImageBitmap(getPlayImageBitmap(position));
+        if (dataList.get(position).isPlaying())
+        {
+            holder.imageView.setImageBitmap(pauseImageBitmap);
+        }
+        else {
+            holder.imageView.setImageBitmap(playImageBitmap);
+        }
         holder.imageView.setTag(position);
         holder.checkBox.setTag(position);
         holder.checkBox.setChecked(dataList.get(position).isCheckBoxChecked());
 
         setAlbumCover(holder,position);
-    }
-
-    public Bitmap getPlayImageBitmap(int position){
-        byte[] temp=dataList.get(position).getPlayImagePicture();
-        return BitmapFactory.decodeByteArray(temp,0,temp.length-1);
-    }
-
-    public Bitmap getAlbumBitmap(SongEntity songEntity){
-        byte[] temp=songEntity.getAlbumPicture();
-        return BitmapFactory.decodeByteArray(temp,0,temp.length-1);
     }
 
     public void setAlbumCover(SongViewHolder holder,int position)
@@ -166,12 +157,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             switch (view.getId())
             {
                 case R.id.ImageButtonForPlayInRecyclerWidget:
-                    if(Arrays.equals(dataList.get(position).getPlayImagePicture(), playImageByte))
+                    if(!dataList.get(position).isPlaying())
                     {
-                        dataList.get(position).setPlayImagePicture(pauseImageByte);
+                        dataList.get(position).setPlaying(true);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_PLAY,dataList.get(position));
                     }else {
-                        dataList.get(position).setPlayImagePicture(playImageByte);
+                        dataList.get(position).setPlaying(false);
                         clickListener.onClick(view,ViewNameSongRecyclerEnum.IMAGE_BUTTON_STOP,dataList.get(position));
                     }
                     notifyItemChanged(position);
@@ -203,7 +194,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public void lastPlayedItemReset(int position){
         if (lastPlayPosition!=-1&&lastPlayPosition!=position){
-            dataList.get(lastPlayPosition).setPlayImagePicture(playImageByte);
+            dataList.get(lastPlayPosition).setPlaying(false);
             notifyItemChanged(lastPlayPosition);
         }
         lastPlayPosition=position;
@@ -216,12 +207,5 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         IMAGE_BUTTON_PLAY,
         IMAGE_BUTTON_STOP
     }
-
-    public byte[] getPauseImageByte(){
-        return pauseImageByte;
-    }
-
-
-
 
 }

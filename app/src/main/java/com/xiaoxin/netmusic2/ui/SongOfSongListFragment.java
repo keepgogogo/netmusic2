@@ -1,6 +1,5 @@
 package com.xiaoxin.netmusic2.ui;
 
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -25,13 +24,11 @@ import com.xiaoxin.netmusic2.database.SongEntity;
 import com.xiaoxin.netmusic2.database.SongListDataBase;
 import com.xiaoxin.netmusic2.database.SongListDataBaseDao;
 import com.xiaoxin.netmusic2.database.SongListEntity;
-import com.xiaoxin.netmusic2.listener.PlayingSongChangeListener;
+import com.xiaoxin.netmusic2.listener.MediaPlayerListener;
 import com.xiaoxin.netmusic2.recycler.SongAdapter;
 import com.xiaoxin.netmusic2.recycler.SongRecyclerViewModel;
 import com.xiaoxin.netmusic2.viewmodel.MainActivityViewModel;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -59,7 +56,7 @@ public class SongOfSongListFragment extends Fragment {
 
     private List<SongEntity> songEntities;
     private MediaManager.MediaEasyController mediaEasyController;
-    private PlayingSongChangeListener playingSongChangeListener;
+    private MediaPlayerListener mediaPlayerListener;
 
     @Override
     public void onViewCreated(@NonNull View view,Bundle savedInstanceState)
@@ -181,7 +178,7 @@ public class SongOfSongListFragment extends Fragment {
         if(underPlaySong!=null){
             int indexOfUnderPlaySong=getIndexOfSongEntityFromList(adapter.getDataList(),underPlaySong);
             if (indexOfUnderPlaySong!=-1){
-                underPlaySong.setPlayImagePicture(getPauseImageBytes());
+                underPlaySong.setPlaying(true);
                 songEntities.remove(indexOfUnderPlaySong);
                 songEntities.add(indexOfUnderPlaySong,underPlaySong);
                 adapter.setDataList(songEntities);
@@ -208,15 +205,8 @@ public class SongOfSongListFragment extends Fragment {
         return -1;
     }
 
-    public byte[] getPauseImageBytes(){
-        Bitmap tempBitmap=BitmapFactory.decodeResource(mainActivity.getResources(),R.mipmap.ic_play_bar_btn_pause);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
-        tempBitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-        return outputStream.toByteArray();
-    }
-
     public void initImageOfAlbumInTheBottomOfScreen(){
-        imageViewOfAlbumInTheBottomOfScreen=mainActivityViewModel.getImageViewForAlbumPictureIntheBottomOfScreen();
+        imageViewOfAlbumInTheBottomOfScreen=mainActivityViewModel.getImageViewForAlbumPictureInTheBottomOfScreen();
     }
 
 
@@ -265,14 +255,15 @@ public class SongOfSongListFragment extends Fragment {
     }
 
     public void initPlayingSongChangeListener(){
-        playingSongChangeListener=new PlayingSongChangeListener() {
+        mediaPlayerListener =new MediaPlayerListener() {
+
             @Override
             public void onChange(SongEntity oldSong, SongEntity newSong) {
                 List<SongEntity> tempEntities=adapter.getDataList();
                 int indexOfOldSong=getIndexOfSongEntityFromList(tempEntities,oldSong);
                 int indexOfNewSong=getIndexOfSongEntityFromList(tempEntities,newSong);
-                oldSong.setPlayImagePicture(adapter.getPlayImageBytes());
-                newSong.setPlayImagePicture(adapter.getPlayImageBytes());
+                oldSong.setPlaying(false);
+                newSong.setPlaying(true);
                 tempEntities.remove(indexOfNewSong);
                 tempEntities.add(indexOfNewSong,newSong);
                 tempEntities.remove(indexOfOldSong);
@@ -280,8 +271,9 @@ public class SongOfSongListFragment extends Fragment {
                 adapter.setDataList(tempEntities);
                 songRecyclerViewModel.getCurrentData().setValue(tempEntities);
             }
+
         };
-        mainActivityViewModel.setSongOfSongListFragmentSongChangeListener(playingSongChangeListener);
+        mainActivityViewModel.setSongOfSongListFragmentSongChangeListener(mediaPlayerListener);
     }
 
 
